@@ -1,6 +1,10 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { cn } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
+import { Mic, MicOff } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 interface Lyric {
   text: string;
@@ -18,8 +22,11 @@ const KaraokePlayer: React.FC<KaraokePlayerProps> = ({
   currentTime, 
   isPlaying 
 }) => {
+  const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
   const [activeLyricIndex, setActiveLyricIndex] = useState(0);
+  const [micEnabled, setMicEnabled] = useState(false);
+  const [micStream, setMicStream] = useState<MediaStream | null>(null);
 
   // Effect to track the active lyric based on currentTime
   useEffect(() => {
@@ -49,9 +56,51 @@ const KaraokePlayer: React.FC<KaraokePlayerProps> = ({
     }
   }, [activeLyricIndex]);
 
+  // Microphone handling
+  const toggleMicrophone = async () => {
+    try {
+      if (!micEnabled) {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        setMicStream(stream);
+        setMicEnabled(true);
+        toast.success(t('karaoke.micEnabled'));
+      } else {
+        if (micStream) {
+          micStream.getTracks().forEach(track => track.stop());
+        }
+        setMicStream(null);
+        setMicEnabled(false);
+        toast.info(t('karaoke.micDisabled'));
+      }
+    } catch (err) {
+      console.error('Error accessing microphone:', err);
+      toast.error(t('karaoke.micPermissionDenied'));
+    }
+  };
+
   return (
     <div className="bg-secondary/20 rounded-lg p-6 border border-secondary">
-      <h2 className="text-xl font-semibold mb-4 text-center">Karaoke Mode</h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-semibold text-center">{t('karaoke.title')}</h2>
+        <Button 
+          onClick={toggleMicrophone} 
+          variant={micEnabled ? "default" : "outline"}
+          size="sm"
+          className={micEnabled ? "bg-upbeats-500 hover:bg-upbeats-600" : ""}
+        >
+          {micEnabled ? (
+            <>
+              <Mic className="h-5 w-5 mr-2" />
+              {t('karaoke.micOn')}
+            </>
+          ) : (
+            <>
+              <MicOff className="h-5 w-5 mr-2" />
+              {t('karaoke.micOff')}
+            </>
+          )}
+        </Button>
+      </div>
       
       {/* Audio Visualizer */}
       <div className="visualizer mb-6">

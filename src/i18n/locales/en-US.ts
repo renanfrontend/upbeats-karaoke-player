@@ -1,3 +1,4 @@
+
 export default {
   navigation: {
     home: 'Home',
@@ -51,6 +52,22 @@ export default {
     noLyricsDesc: 'Lyrics for this song are not available at the moment.',
     selectSong: 'Select a song to start karaoke',
     searchSongs: 'Search for Songs',
-    suggestedSongs: 'Suggested Songs'
+    suggestedSongs: 'Suggested Songs',
+    micEnabled: 'Microphone enabled',
+    micDisabled: 'Microphone disabled',
+    micPermissionDenied: 'Microphone permission denied',
+    micOn: 'Mic On',
+    micOff: 'Mic Off'
+  },
+  common: {
+    play: 'Play',
+    pause: 'Pause',
+    stop: 'Stop',
+    next: 'Next',
+    previous: 'Previous',
+    chooseFromSuggested: 'Choose from the suggested songs or search for more'
+  },
+  player: {
+    playbackError: 'Error playing this track'
   }
 };

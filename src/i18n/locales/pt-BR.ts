@@ -1,3 +1,4 @@
+
 export default {
   navigation: {
     home: 'Início',
@@ -51,6 +52,22 @@ export default {
     noLyricsDesc: 'As letras desta música não estão disponíveis no momento.',
     selectSong: 'Selecione uma música para iniciar o karaokê',
     searchSongs: 'Buscar Músicas',
-    suggestedSongs: 'Músicas Sugeridas'
+    suggestedSongs: 'Músicas Sugeridas',
+    micEnabled: 'Microfone habilitado',
+    micDisabled: 'Microfone desabilitado',
+    micPermissionDenied: 'Permissão do microfone negada',
+    micOn: 'Mic Ligado',
+    micOff: 'Mic Desligado'
+  },
+  common: {
+    play: 'Reproduzir',
+    pause: 'Pausar',
+    stop: 'Parar',
+    next: 'Próximo',
+    previous: 'Anterior',
+    chooseFromSuggested: 'Escolha entre as músicas sugeridas ou busque mais'
+  },
+  player: {
+    playbackError: 'Erro ao reproduzir esta faixa'
   }
 };

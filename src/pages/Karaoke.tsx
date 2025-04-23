@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -6,8 +7,9 @@ import { getTrackById, getLyricsByTrackId, getTopTracks } from '@/services/spoti
 import AppLayout from '@/components/layout/AppLayout';
 import KaraokePlayer from '@/components/karaoke/KaraokePlayer';
 import { Button } from '@/components/ui/button';
-import { Play, Pause, ArrowLeft, Volume2, Music, Search } from 'lucide-react';
+import { Play, Pause, ArrowLeft, Volume2, Music, Search, Mic } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
+import { toast } from 'sonner';
 
 const Karaoke = () => {
   const { t } = useTranslation();
@@ -30,7 +32,12 @@ const Karaoke = () => {
   const { data: lyrics } = useQuery({
     queryKey: ['lyrics', trackId],
     queryFn: () => getLyricsByTrackId(trackId || ''),
-    enabled: !!trackId
+    enabled: !!trackId,
+    onSuccess: (data) => {
+      if (!data) {
+        toast.info(t('karaoke.noLyrics'));
+      }
+    }
   });
   
   const { data: suggestedTracks } = useQuery({
@@ -66,10 +73,14 @@ const Karaoke = () => {
     if (!audioElement) return;
     
     if (isPlaying) {
-      audioElement.play().catch(error => {
-        console.error("Error playing audio:", error);
-        setIsPlaying(false);
-      });
+      const playPromise = audioElement.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(error => {
+          console.error("Error playing audio:", error);
+          setIsPlaying(false);
+          toast.error(t('player.playbackError'));
+        });
+      }
     } else {
       audioElement.pause();
     }
@@ -80,11 +91,15 @@ const Karaoke = () => {
       audioRef.current.volume = volume / 100;
     }
   }, [volume]);
+
+  useEffect(() => {
+    // Reset play state when track changes
+    setIsPlaying(false);
+    setCurrentTime(0);
+  }, [trackId]);
   
   const selectTrack = (newTrackId: string) => {
     navigate(`/karaoke?trackId=${newTrackId}`);
-    setIsPlaying(false);
-    setCurrentTime(0);
   };
   
   const handlePlayPause = () => {
