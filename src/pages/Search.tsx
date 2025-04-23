@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { searchTracks } from '@/services/spotifyApi';
@@ -6,10 +5,12 @@ import AppLayout from '@/components/layout/AppLayout';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Search as SearchIcon } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const Search = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
+  const { t } = useTranslation();
   
   React.useEffect(() => {
     const timer = setTimeout(() => {
@@ -28,12 +29,12 @@ const Search = () => {
   return (
     <AppLayout>
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-6">Search</h1>
+        <h1 className="text-3xl font-bold mb-6">{t('navigation.search')}</h1>
         
         <div className="relative max-w-2xl">
           <Input
             type="text"
-            placeholder="Search for songs, artists, or lyrics..."
+            placeholder={t('search.placeholder')}
             className="bg-secondary/50 border-secondary text-white pl-10 h-12 text-lg"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -46,7 +47,7 @@ const Search = () => {
       <div className="mt-8">
         {debouncedQuery && (
           <h2 className="text-xl font-semibold mb-4">
-            Results for "{debouncedQuery}"
+            {t('search.results')} "{debouncedQuery}"
           </h2>
         )}
         
@@ -88,21 +89,21 @@ const Search = () => {
           </div>
         ) : debouncedQuery ? (
           <div className="text-center p-8 text-muted-foreground">
-            <p>No results found for "{debouncedQuery}"</p>
-            <p className="text-sm mt-2">Try different keywords or check your spelling</p>
+            <p>{t('search.noResults')}</p>
+            <p className="text-sm mt-2">{t('search.tryDifferent')}</p>
           </div>
         ) : (
           <div className="text-center p-8 text-muted-foreground">
-            <p>Type something to search</p>
+            <p>{t('search.typeToSearch')}</p>
             <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-2xl mx-auto">
-              {['Pop', 'Rock', 'Hip Hop', 'Electronic'].map((genre) => (
+              {Object.keys(t('search.genres', { returnObjects: true })).map((genre) => (
                 <Button 
                   key={genre}
                   variant="outline" 
                   className="bg-secondary/30 border-secondary hover:bg-secondary/50"
-                  onClick={() => setSearchQuery(genre)}
+                  onClick={() => setSearchQuery(t(`search.genres.${genre}`))}
                 >
-                  {genre}
+                  {t(`search.genres.${genre}`)}
                 </Button>
               ))}
             </div>

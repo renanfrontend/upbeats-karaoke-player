@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -9,6 +8,9 @@ import Search from "./pages/Search";
 import Library from "./pages/Library";
 import Karaoke from "./pages/Karaoke";
 import NotFound from "./pages/NotFound";
+
+// Import i18n configuration
+import './i18n';
 
 const queryClient = new QueryClient();
 

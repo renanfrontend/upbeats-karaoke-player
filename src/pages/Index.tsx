@@ -4,14 +4,15 @@ import { useQuery } from '@tanstack/react-query';
 import { getPopularArtists, getTopTracks } from '@/services/spotifyApi';
 import AppLayout from '@/components/layout/AppLayout';
 import FeaturedSection from '@/components/music/FeaturedSection';
-import MusicCard from '@/components/music/MusicCard';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { Mic2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 const Index = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   
   const { data: artists, isLoading: isLoadingArtists } = useQuery({
     queryKey: ['popularArtists'],
@@ -29,9 +30,9 @@ const Index = () => {
       <div className="relative rounded-xl overflow-hidden mb-8 p-8 bg-gradient-to-r from-upbeats-900 to-upbeats-500">
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80')] bg-cover opacity-20"></div>
         <div className="relative z-10 max-w-2xl">
-          <h1 className="text-4xl font-bold mb-2">Welcome to UP! BEATS Karaoke</h1>
+          <h1 className="text-4xl font-bold mb-2">{t('home.welcome')}</h1>
           <p className="text-lg text-gray-200 mb-6">
-            Sing your heart out with our karaoke experience. Access thousands of songs and enjoy real-time lyrics display.
+            {t('home.description')}
           </p>
           <Button 
             onClick={() => navigate('/karaoke')}
@@ -39,7 +40,7 @@ const Index = () => {
             className="bg-upbeats-500 hover:bg-upbeats-600 text-white"
           >
             <Mic2 className="mr-2 h-5 w-5" />
-            Try Karaoke Mode
+            {t('home.tryKaraoke')}
           </Button>
         </div>
       </div>
@@ -47,8 +48,10 @@ const Index = () => {
       {/* Top Artists */}
       <section className="mb-8">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold">Popular Artists</h2>
-          <Button variant="ghost" className="text-upbeats-400 hover:text-upbeats-300">View All</Button>
+          <h2 className="text-2xl font-bold">{t('home.popularArtists')}</h2>
+          <Button variant="ghost" className="text-upbeats-400 hover:text-upbeats-300">
+            {t('home.viewAll')}
+          </Button>
         </div>
         
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-6">
