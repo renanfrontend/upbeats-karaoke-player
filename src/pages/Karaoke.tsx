@@ -1,16 +1,16 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { getTrackById, getLyricsByTrackId, getTopTracks } from '@/services/spotifyApi';
 import AppLayout from '@/components/layout/AppLayout';
 import KaraokePlayer from '@/components/karaoke/KaraokePlayer';
-import MusicCard from '@/components/music/MusicCard';
 import { Button } from '@/components/ui/button';
-import { Play, Pause, ArrowLeft, Volume2, Music } from 'lucide-react';
+import { Play, Pause, ArrowLeft, Volume2, Music, Search } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 
 const Karaoke = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const trackId = searchParams.get('trackId');
@@ -38,7 +38,6 @@ const Karaoke = () => {
     queryFn: getTopTracks
   });
   
-  // Audio player controls
   useEffect(() => {
     const audioElement = audioRef.current;
     
@@ -62,7 +61,6 @@ const Karaoke = () => {
     };
   }, []);
   
-  // Handle play/pause
   useEffect(() => {
     const audioElement = audioRef.current;
     if (!audioElement) return;
@@ -77,14 +75,12 @@ const Karaoke = () => {
     }
   }, [isPlaying]);
   
-  // Handle volume change
   useEffect(() => {
     if (audioRef.current) {
       audioRef.current.volume = volume / 100;
     }
   }, [volume]);
   
-  // Select a track
   const selectTrack = (newTrackId: string) => {
     navigate(`/karaoke?trackId=${newTrackId}`);
     setIsPlaying(false);
@@ -103,14 +99,12 @@ const Karaoke = () => {
     }
   };
   
-  // Format time for display (e.g., 3:45)
   const formatTime = (timeInSeconds: number) => {
     const minutes = Math.floor(timeInSeconds / 60);
     const seconds = Math.floor(timeInSeconds % 60);
     return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
   };
   
-  // Get track duration from audio element or default
   const duration = (audioRef.current?.duration || 0) || (track?.duration || 0);
 
   return (
@@ -121,14 +115,13 @@ const Karaoke = () => {
         onClick={() => navigate(-1)}
       >
         <ArrowLeft className="h-5 w-5 mr-2" />
-        Back
+        {t('karaoke.back')}
       </Button>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">
           {track ? (
             <>
-              {/* Playing Now Section */}
               <div className="flex items-center p-6 bg-secondary/20 rounded-lg">
                 <img 
                   src={track.coverImage} 
@@ -146,8 +139,17 @@ const Karaoke = () => {
                       size="lg" 
                       className="bg-upbeats-500 hover:bg-upbeats-600"
                     >
-                      {isPlaying ? <Pause className="mr-2 h-5 w-5" /> : <Play className="mr-2 h-5 w-5 ml-1" />}
-                      {isPlaying ? "Pause" : "Play"}
+                      {isPlaying ? (
+                        <>
+                          <Pause className="mr-2 h-5 w-5" />
+                          {t('common.pause')}
+                        </>
+                      ) : (
+                        <>
+                          <Play className="mr-2 h-5 w-5 ml-1" />
+                          {t('common.play')}
+                        </>
+                      )}
                     </Button>
                     
                     <div className="flex items-center ml-6 space-x-2">
@@ -164,7 +166,6 @@ const Karaoke = () => {
                 </div>
               </div>
               
-              {/* Audio Controls */}
               <div className="p-4 bg-secondary/20 rounded-lg">
                 <div className="flex items-center mb-1">
                   <span className="text-xs text-muted-foreground mr-3 w-10">
@@ -182,7 +183,6 @@ const Karaoke = () => {
                   </span>
                 </div>
                 
-                {/* Hidden audio element */}
                 <audio 
                   ref={audioRef}
                   src={track.previewUrl}
@@ -190,7 +190,6 @@ const Karaoke = () => {
                 />
               </div>
               
-              {/* Karaoke Player with Lyrics */}
               {lyrics ? (
                 <KaraokePlayer 
                   lyrics={lyrics.lines} 
@@ -200,30 +199,29 @@ const Karaoke = () => {
               ) : (
                 <div className="bg-secondary/20 rounded-lg p-6 text-center">
                   <Music className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
-                  <h3 className="text-xl font-medium mb-2">No Lyrics Available</h3>
+                  <h3 className="text-xl font-medium mb-2">{t('karaoke.noLyrics')}</h3>
                   <p className="text-muted-foreground">
-                    Lyrics for this song are not available at the moment.
+                    {t('karaoke.noLyricsDesc')}
                   </p>
                 </div>
               )}
             </>
           ) : (
             <div className="p-8 bg-secondary/20 rounded-lg text-center">
-              <h2 className="text-xl font-semibold mb-4">Select a song to start karaoke</h2>
+              <h2 className="text-xl font-semibold mb-4">{t('karaoke.selectSong')}</h2>
               <p className="text-muted-foreground mb-4">
-                Choose from the suggested songs or search for your favorites
+                {t('common.chooseFromSuggested')}
               </p>
               <Button onClick={() => navigate('/search')} className="bg-upbeats-500 hover:bg-upbeats-600">
                 <Search className="mr-2 h-5 w-5" />
-                Search for Songs
+                {t('karaoke.searchSongs')}
               </Button>
             </div>
           )}
         </div>
         
-        {/* Suggested Songs */}
         <div className="lg:col-span-1">
-          <h2 className="text-xl font-semibold mb-4">Suggested Songs</h2>
+          <h2 className="text-xl font-semibold mb-4">{t('karaoke.suggestedSongs')}</h2>
           <div className="grid gap-4">
             {suggestedTracks?.map((suggestedTrack) => (
               <div 
@@ -255,8 +253,5 @@ const Karaoke = () => {
     </AppLayout>
   );
 };
-
-// Import missing icon
-import { Search } from 'lucide-react';
 
 export default Karaoke;

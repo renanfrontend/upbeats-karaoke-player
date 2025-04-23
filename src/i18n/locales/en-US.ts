@@ -1,4 +1,3 @@
-
 export default {
   navigation: {
     home: 'Home',
@@ -32,5 +31,26 @@ export default {
     popularArtists: 'Popular Artists',
     viewAll: 'View All',
     popularTracks: 'Popular Tracks for Karaoke'
+  },
+  library: {
+    title: 'Your Library',
+    likedSongs: 'Liked Songs',
+    recentlyPlayed: 'Recently Played',
+    yourPlaylists: 'Your Playlists',
+    createPlaylist: 'Create Your First Playlist',
+    playlistDescription: "It's easy to organize your favorite songs into playlists",
+    createButton: 'Create Playlist',
+    songsCount: '{count} songs',
+    playAll: 'Play All'
+  },
+  karaoke: {
+    title: 'Karaoke Mode',
+    back: 'Back',
+    playingNow: 'Playing Now',
+    noLyrics: 'No Lyrics Available',
+    noLyricsDesc: 'Lyrics for this song are not available at the moment.',
+    selectSong: 'Select a song to start karaoke',
+    searchSongs: 'Search for Songs',
+    suggestedSongs: 'Suggested Songs'
   }
 };

@@ -1,4 +1,3 @@
-
 export default {
   navigation: {
     home: 'Inicio',
@@ -32,5 +31,26 @@ export default {
     popularArtists: 'Artistas Populares',
     viewAll: 'Ver Todo',
     popularTracks: 'Canciones Populares para Karaoke'
+  },
+  library: {
+    title: 'Tu Biblioteca',
+    likedSongs: 'Canciones Favoritas',
+    recentlyPlayed: 'Reproducidas Recientemente',
+    yourPlaylists: 'Tus Listas',
+    createPlaylist: 'Crea Tu Primera Lista',
+    playlistDescription: 'Es fácil organizar tus canciones favoritas en listas de reproducción',
+    createButton: 'Crear Lista',
+    songsCount: '{count} canciones',
+    playAll: 'Reproducir Todo'
+  },
+  karaoke: {
+    title: 'Modo Karaoke',
+    back: 'Volver',
+    playingNow: 'Reproduciendo Ahora',
+    noLyrics: 'Letras No Disponibles',
+    noLyricsDesc: 'Las letras de esta canción no están disponibles en este momento.',
+    selectSong: 'Selecciona una canción para comenzar el karaoke',
+    searchSongs: 'Buscar Canciones',
+    suggestedSongs: 'Canciones Sugeridas'
   }
 };

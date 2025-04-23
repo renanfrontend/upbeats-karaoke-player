@@ -1,52 +1,57 @@
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import AppLayout from '@/components/layout/AppLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Heart, Clock, Music2, Play } from 'lucide-react';
 
 const Library = () => {
+  const { t } = useTranslation();
+  
   // Mock data for library
   const likedSongs = [
-    { id: '1', title: 'Hello', artist: 'Adele', album: '25', duration: '4:55', cover: 'https://i.scdn.co/image/ab67616d0000b2736a7874a8d05aaf3eddce428a' },
-    { id: '2', title: 'Blinding Lights', artist: 'The Weeknd', album: 'After Hours', duration: '3:20', cover: 'https://i.scdn.co/image/ab67616d0000b27338cf30ffb7079c6b176edcd4' },
-    { id: '3', title: 'bad guy', artist: 'Billie Eilish', album: 'WHEN WE ALL FALL ASLEEP, WHERE DO WE GO?', duration: '3:14', cover: 'https://i.scdn.co/image/ab67616d0000b2732a038d3bf875d23e4aeaa84e' },
+    { id: '1', title: 'Hello', artist: 'Adele', album: '25', duration: '4:55', cover: '/covers/hello-adele.jpg' },
+    { id: '2', title: 'Blinding Lights', artist: 'The Weeknd', album: 'After Hours', duration: '3:20', cover: '/covers/blinding-lights.jpg' },
+    { id: '3', title: 'Easy On Me', artist: 'Adele', album: '30', duration: '3:44', cover: '/covers/easy-on-me.jpg' },
   ];
   
   const recentlyPlayed = [
     { id: '4', title: 'Shape of You', artist: 'Ed Sheeran', album: '÷ (Divide)', duration: '3:53', cover: 'https://i.scdn.co/image/ab67616d0000b273ba5db46f4b838ef6027e6f96' },
     { id: '5', title: 'Anti-Hero', artist: 'Taylor Swift', album: 'Midnights', duration: '3:20', cover: 'https://i.scdn.co/image/ab67616d0000b273bb54dde68cd23e2a268ae0f5' },
-    { id: '1', title: 'Hello', artist: 'Adele', album: '25', duration: '4:55', cover: 'https://i.scdn.co/image/ab67616d0000b2736a7874a8d05aaf3eddce428a' },
+    { id: '1', title: 'Hello', artist: 'Adele', album: '25', duration: '4:55', cover: '/covers/hello-adele.jpg' },
   ];
 
   return (
     <AppLayout>
-      <h1 className="text-3xl font-bold mb-6">Your Library</h1>
+      <h1 className="text-3xl font-bold mb-6">{t('library.title')}</h1>
       
       <Tabs defaultValue="liked">
         <TabsList className="mb-6 bg-secondary/40">
           <TabsTrigger value="liked" className="data-[state=active]:bg-upbeats-500">
             <Heart className="h-4 w-4 mr-2" />
-            Liked Songs
+            {t('library.likedSongs')}
           </TabsTrigger>
           <TabsTrigger value="recent" className="data-[state=active]:bg-upbeats-500">
             <Clock className="h-4 w-4 mr-2" />
-            Recently Played
+            {t('library.recentlyPlayed')}
           </TabsTrigger>
           <TabsTrigger value="playlists" className="data-[state=active]:bg-upbeats-500">
             <Music2 className="h-4 w-4 mr-2" />
-            Your Playlists
+            {t('library.yourPlaylists')}
           </TabsTrigger>
         </TabsList>
         
         <TabsContent value="liked" className="bg-secondary/20 rounded-lg p-4">
           <div className="flex justify-between items-center mb-4">
             <div>
-              <h2 className="text-xl font-semibold">Liked Songs</h2>
-              <p className="text-muted-foreground text-sm">{likedSongs.length} songs</p>
+              <h2 className="text-xl font-semibold">{t('library.likedSongs')}</h2>
+              <p className="text-muted-foreground text-sm">
+                {t('library.songsCount', { count: likedSongs.length })}
+              </p>
             </div>
             <Button className="bg-upbeats-500 hover:bg-upbeats-600">
-              <Play className="h-4 w-4 mr-2" /> Play All
+              <Play className="h-4 w-4 mr-2" /> {t('library.playAll')}
             </Button>
           </div>
           
@@ -71,11 +76,13 @@ const Library = () => {
         <TabsContent value="recent" className="bg-secondary/20 rounded-lg p-4">
           <div className="flex justify-between items-center mb-4">
             <div>
-              <h2 className="text-xl font-semibold">Recently Played</h2>
-              <p className="text-muted-foreground text-sm">{recentlyPlayed.length} songs</p>
+              <h2 className="text-xl font-semibold">{t('library.recentlyPlayed')}</h2>
+              <p className="text-muted-foreground text-sm">
+                {t('library.songsCount', { count: recentlyPlayed.length })}
+              </p>
             </div>
             <Button className="bg-upbeats-500 hover:bg-upbeats-600">
-              <Play className="h-4 w-4 mr-2" /> Play All
+              <Play className="h-4 w-4 mr-2" /> {t('library.playAll')}
             </Button>
           </div>
           
@@ -99,9 +106,11 @@ const Library = () => {
         
         <TabsContent value="playlists" className="bg-secondary/20 rounded-lg p-6">
           <div className="text-center py-8">
-            <h2 className="text-xl font-semibold mb-2">Create Your First Playlist</h2>
-            <p className="text-muted-foreground mb-6">It's easy to organize your favorite songs into playlists</p>
-            <Button className="bg-upbeats-500 hover:bg-upbeats-600">Create Playlist</Button>
+            <h2 className="text-xl font-semibold mb-2">{t('library.createPlaylist')}</h2>
+            <p className="text-muted-foreground mb-6">{t('library.playlistDescription')}</p>
+            <Button className="bg-upbeats-500 hover:bg-upbeats-600">
+              {t('library.createButton')}
+            </Button>
           </div>
         </TabsContent>
       </Tabs>
