@@ -11,15 +11,15 @@ const Library = () => {
   
   // Mock data for library
   const likedSongs = [
-    { id: '1', title: 'Hello', artist: 'Adele', album: '25', duration: '4:55', cover: '/covers/hello-adele.jpg' },
-    { id: '2', title: 'Blinding Lights', artist: 'The Weeknd', album: 'After Hours', duration: '3:20', cover: '/covers/blinding-lights.jpg' },
-    { id: '3', title: 'Easy On Me', artist: 'Adele', album: '30', duration: '3:44', cover: '/covers/easy-on-me.jpg' },
+    { id: '1', title: 'Hello', artist: 'Adele', album: '25', duration: '4:55', cover: 'https://i.scdn.co/image/ab67616d0000b2736a7874a8d05aaf3eddce428a' },
+    { id: '2', title: 'Blinding Lights', artist: 'The Weeknd', album: 'After Hours', duration: '3:20', cover: 'https://i.scdn.co/image/ab67616d0000b27338cf30ffb7079c6b176edcd4' },
+    { id: '3', title: 'Easy On Me', artist: 'Adele', album: '30', duration: '3:44', cover: 'https://i.scdn.co/image/ab67616d0000b273a7a0fcfd9441d7a404a9cf73' },
   ];
-  
+
   const recentlyPlayed = [
     { id: '4', title: 'Shape of You', artist: 'Ed Sheeran', album: '÷ (Divide)', duration: '3:53', cover: 'https://i.scdn.co/image/ab67616d0000b273ba5db46f4b838ef6027e6f96' },
     { id: '5', title: 'Anti-Hero', artist: 'Taylor Swift', album: 'Midnights', duration: '3:20', cover: 'https://i.scdn.co/image/ab67616d0000b273bb54dde68cd23e2a268ae0f5' },
-    { id: '1', title: 'Hello', artist: 'Adele', album: '25', duration: '4:55', cover: '/covers/hello-adele.jpg' },
+    { id: '1', title: 'Hello', artist: 'Adele', album: '25', duration: '4:55', cover: 'https://i.scdn.co/image/ab67616d0000b2736a7874a8d05aaf3eddce428a' },
   ];
 
   return (
@@ -66,8 +66,8 @@ const Library = () => {
                   <h3 className="font-medium">{song.title}</h3>
                   <p className="text-sm text-muted-foreground">{song.artist}</p>
                 </div>
-                <div className="text-muted-foreground text-sm mr-4">{song.album}</div>
-                <div className="text-muted-foreground text-sm">{song.duration}</div>
+                <div className="text-muted-foreground text-sm mr-4 hidden md:block">{song.album}</div>
+                <div className="text-muted-foreground text-sm hidden sm:block">{song.duration}</div>
               </div>
             ))}
           </div>
@@ -97,8 +97,8 @@ const Library = () => {
                   <h3 className="font-medium">{song.title}</h3>
                   <p className="text-sm text-muted-foreground">{song.artist}</p>
                 </div>
-                <div className="text-muted-foreground text-sm mr-4">{song.album}</div>
-                <div className="text-muted-foreground text-sm">{song.duration}</div>
+                <div className="text-muted-foreground text-sm mr-4 hidden md:block">{song.album}</div>
+                <div className="text-muted-foreground text-sm hidden sm:block">{song.duration}</div>
               </div>
             ))}
           </div>

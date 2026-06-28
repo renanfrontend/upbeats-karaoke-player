@@ -137,18 +137,18 @@ const Karaoke = () => {
         <div className="lg:col-span-2 space-y-6">
           {track ? (
             <>
-              <div className="flex items-center p-6 bg-secondary/20 rounded-lg">
-                <img 
-                  src={track.coverImage} 
+              <div className="flex flex-col sm:flex-row items-center sm:items-start p-4 md:p-6 bg-secondary/20 rounded-lg gap-4 sm:gap-0">
+                <img
+                  src={track.coverImage}
                   alt={track.title}
-                  className="w-32 h-32 rounded-lg shadow-lg object-cover" 
+                  className="w-24 h-24 md:w-32 md:h-32 rounded-lg shadow-lg object-cover shrink-0"
                 />
-                <div className="ml-6">
-                  <h1 className="text-3xl font-bold">{track.title}</h1>
-                  <p className="text-xl text-muted-foreground">{track.artist}</p>
+                <div className="sm:ml-6 text-center sm:text-left">
+                  <h1 className="text-xl md:text-3xl font-bold">{track.title}</h1>
+                  <p className="text-base md:text-xl text-muted-foreground">{track.artist}</p>
                   <p className="text-sm text-muted-foreground mt-1">{track.albumTitle}</p>
-                  
-                  <div className="flex items-center mt-4">
+
+                  <div className="flex items-center justify-center sm:justify-start mt-4">
                     <Button 
                       onClick={handlePlayPause}
                       size="lg" 

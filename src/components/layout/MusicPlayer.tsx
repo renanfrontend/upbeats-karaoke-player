@@ -18,7 +18,7 @@ interface MusicPlayerProps {
 const MusicPlayer: React.FC<MusicPlayerProps> = ({
   songTitle = "Select a song",
   artist = "Artist name",
-  coverArt = "/placeholder.svg",
+  coverArt = `${import.meta.env.BASE_URL}placeholder.svg`,
   audioSrc,
   isPlaying = false,
   onPlayPause = () => {},
@@ -30,7 +30,6 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
   const [duration, setDuration] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Initialize audio element
   useEffect(() => {
     if (!audioRef.current) {
       const audio = new Audio();
@@ -45,7 +44,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
         onPlayPause(false);
         setCurrentTime(0);
       });
-      
+
       return () => {
         audio.removeEventListener('timeupdate', updateProgress);
         audio.removeEventListener('loadedmetadata', () => {});
@@ -55,7 +54,6 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
     }
   }, []);
 
-  // Update audio source when changed
   useEffect(() => {
     if (audioRef.current && audioSrc) {
       audioRef.current.src = audioSrc;
@@ -63,7 +61,6 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
     }
   }, [audioSrc]);
 
-  // Handle play/pause changes
   useEffect(() => {
     if (audioRef.current) {
       if (isPlaying) {
@@ -81,7 +78,6 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
     }
   }, [isPlaying]);
 
-  // Handle volume changes
   useEffect(() => {
     if (audioRef.current) {
       audioRef.current.volume = (isMuted ? 0 : volume) / 100;
@@ -113,64 +109,83 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
   };
 
   return (
-    <div className="h-24 bg-upbeats-950 border-t border-border py-3 px-5 flex items-center justify-between">
-      <div className="flex items-center space-x-4">
-        <img src={coverArt} alt={songTitle} className="h-14 w-14 rounded-md object-cover" />
-        <div>
-          <h4 className="font-medium text-sm">{songTitle}</h4>
-          <p className="text-xs text-muted-foreground">{artist}</p>
+    <div className="bg-upbeats-950 border-t border-border py-2 px-3 md:py-3 md:px-5">
+      {/* Mobile layout */}
+      <div className="flex md:hidden items-center gap-3">
+        <img src={coverArt} alt={songTitle} className="h-10 w-10 rounded object-cover shrink-0" />
+        <div className="flex-1 min-w-0">
+          <h4 className="font-medium text-xs truncate">{songTitle}</h4>
+          <p className="text-xs text-muted-foreground truncate">{artist}</p>
         </div>
-      </div>
-      
-      <div className="flex flex-col items-center max-w-md w-full">
-        <div className="flex items-center space-x-4">
-          <Button size="sm" variant="ghost" className="text-muted-foreground hover:text-white">
-            <SkipBack className="h-5 w-5" />
-          </Button>
-          <Button 
-            size="icon" 
-            onClick={handlePlayPause}
-            className="rounded-full bg-white text-black hover:bg-white/90 h-8 w-8 flex items-center justify-center"
-          >
-            {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4 ml-0.5" />}
-          </Button>
-          <Button size="sm" variant="ghost" className="text-muted-foreground hover:text-white">
-            <SkipForward className="h-5 w-5" />
-          </Button>
-        </div>
-        
-        <div className="flex items-center w-full mt-2">
-          <span className="text-xs text-muted-foreground mr-2">{formatTime(currentTime)}</span>
-          <Slider
-            className="flex-1"
-            value={[currentTime]}
-            max={duration || 100}
-            step={0.1}
-            onValueChange={handleSeek}
-          />
-          <span className="text-xs text-muted-foreground ml-2">{formatTime(duration || 0)}</span>
-        </div>
-      </div>
-      
-      <div className="flex items-center space-x-2 w-32">
-        <Button 
-          size="sm" 
-          variant="ghost" 
-          className="text-muted-foreground hover:text-white"
-          onClick={() => setIsMuted(!isMuted)}
+        <Button
+          size="icon"
+          onClick={handlePlayPause}
+          className="rounded-full bg-white text-black hover:bg-white/90 h-8 w-8 shrink-0"
         >
-          {isMuted || volume === 0 ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
+          {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4 ml-0.5" />}
         </Button>
-        <Slider
-          className="w-20"
-          value={[isMuted ? 0 : volume]}
-          max={100}
-          step={1}
-          onValueChange={(value) => {
-            setVolume(value[0]);
-            if (value[0] > 0) setIsMuted(false);
-          }}
-        />
+      </div>
+
+      {/* Desktop layout */}
+      <div className="hidden md:flex items-center justify-between">
+        <div className="flex items-center space-x-4 w-48">
+          <img src={coverArt} alt={songTitle} className="h-14 w-14 rounded-md object-cover shrink-0" />
+          <div className="min-w-0">
+            <h4 className="font-medium text-sm truncate">{songTitle}</h4>
+            <p className="text-xs text-muted-foreground truncate">{artist}</p>
+          </div>
+        </div>
+
+        <div className="flex flex-col items-center max-w-md w-full">
+          <div className="flex items-center space-x-4">
+            <Button size="sm" variant="ghost" className="text-muted-foreground hover:text-white">
+              <SkipBack className="h-5 w-5" />
+            </Button>
+            <Button
+              size="icon"
+              onClick={handlePlayPause}
+              className="rounded-full bg-white text-black hover:bg-white/90 h-8 w-8 flex items-center justify-center"
+            >
+              {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4 ml-0.5" />}
+            </Button>
+            <Button size="sm" variant="ghost" className="text-muted-foreground hover:text-white">
+              <SkipForward className="h-5 w-5" />
+            </Button>
+          </div>
+
+          <div className="flex items-center w-full mt-2">
+            <span className="text-xs text-muted-foreground mr-2">{formatTime(currentTime)}</span>
+            <Slider
+              className="flex-1"
+              value={[currentTime]}
+              max={duration || 100}
+              step={0.1}
+              onValueChange={handleSeek}
+            />
+            <span className="text-xs text-muted-foreground ml-2">{formatTime(duration || 0)}</span>
+          </div>
+        </div>
+
+        <div className="flex items-center space-x-2 w-32">
+          <Button
+            size="sm"
+            variant="ghost"
+            className="text-muted-foreground hover:text-white"
+            onClick={() => setIsMuted(!isMuted)}
+          >
+            {isMuted || volume === 0 ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
+          </Button>
+          <Slider
+            className="w-20"
+            value={[isMuted ? 0 : volume]}
+            max={100}
+            step={1}
+            onValueChange={(value) => {
+              setVolume(value[0]);
+              if (value[0] > 0) setIsMuted(false);
+            }}
+          />
+        </div>
       </div>
     </div>
   );

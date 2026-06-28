@@ -11,7 +11,7 @@ const AppLogo: React.FC<AppLogoProps> = ({ className, showText = true }) => {
   return (
     <div className={cn("flex items-center gap-2", className)}>
       <img 
-        src="/lovable-uploads/ff5efa7d-7ff2-451d-bb51-e0444e8f4675-transparent.png" 
+        src={`${import.meta.env.BASE_URL}lovable-uploads/ff5efa7d-7ff2-451d-bb51-e0444e8f4675.png`} 
         alt="Up! Beats Logo" 
         className="h-10 w-auto" 
       />
