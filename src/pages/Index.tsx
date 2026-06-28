@@ -63,16 +63,21 @@ const Index = () => {
             ))
           ) : (
             artists?.map((artist) => (
-              <div key={artist.id} className="flex flex-col items-center">
-                <div className="rounded-full overflow-hidden h-20 w-20 md:h-36 md:w-36 mb-2 md:mb-3">
+              <button
+                key={artist.id}
+                onClick={() => navigate(`/search?q=${encodeURIComponent(artist.name)}`)}
+                className="flex flex-col items-center group focus:outline-none"
+              >
+                <div className="rounded-full overflow-hidden h-20 w-20 md:h-36 md:w-36 mb-2 md:mb-3 bg-secondary">
                   <img
                     src={artist.imageUrl}
                     alt={artist.name}
-                    className="object-cover w-full h-full hover:scale-105 transition-transform"
+                    className="object-cover w-full h-full group-hover:scale-105 transition-transform"
+                    onError={(e) => { e.currentTarget.src = `${import.meta.env.BASE_URL}placeholder.svg`; }}
                   />
                 </div>
-                <h3 className="font-medium text-center text-xs md:text-base">{artist.name}</h3>
-              </div>
+                <h3 className="font-medium text-center text-xs md:text-base group-hover:text-upbeats-300 transition-colors">{artist.name}</h3>
+              </button>
             ))
           )}
         </div>
@@ -93,13 +98,9 @@ const Index = () => {
         </div>
       ) : (
         <FeaturedSection
-          title="Popular Tracks for Karaoke"
-          items={tracks?.map(track => ({
-            id: track.id,
-            title: track.title,
-            artist: track.artist,
-            coverImage: track.coverImage
-          })) || []}
+          title={t('home.popularTracks')}
+          items={tracks || []}
+          onViewAll={() => navigate('/search')}
         />
       )}
     </AppLayout>

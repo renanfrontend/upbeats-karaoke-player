@@ -7,6 +7,7 @@ export default {
     karaoke: 'Karaoke Mode',
     songs: 'Songs',
     playlists: {
+      title: 'Playlists',
       liked: 'Liked Songs',
       recent: 'Recently Played',
       new: 'New Playlist'
@@ -49,7 +50,9 @@ export default {
     back: 'Back',
     playingNow: 'Playing Now',
     noLyrics: 'No Lyrics Available',
-    noLyricsDesc: 'Lyrics for this song are not available at the moment.',
+    noLyricsDesc: 'Synced lyrics for this song are not available at the moment.',
+    loadingLyrics: 'Loading lyrics...',
+    previewNote: 'Playing a 30-second preview — lyrics sync to the preview.',
     selectSong: 'Select a song to start karaoke',
     searchSongs: 'Search for Songs',
     suggestedSongs: 'Suggested Songs',
@@ -68,6 +71,9 @@ export default {
     chooseFromSuggested: 'Choose from the suggested songs or search for more'
   },
   player: {
-    playbackError: 'Error playing this track'
+    playbackError: 'Error playing this track',
+    noPreview: 'No audio preview available for this track',
+    selectSong: 'Select a song',
+    artistName: 'Artist name'
   }
 };

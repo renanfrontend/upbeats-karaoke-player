@@ -1,6 +1,9 @@
 
-// This is a mock service to simulate Spotify API calls
-// In a real app, you'd need to implement OAuth and use the actual Spotify API
+// Real music data service.
+// - Track metadata, artwork and 30s audio previews come from the iTunes Search API
+//   (free, no API key). We use JSONP so it works from a static site with no CORS setup.
+// - Time-synced karaoke lyrics come from LRCLIB (https://lrclib.net), a free open API.
+// Everything degrades gracefully to local fallback data if a request fails.
 
 import { toast } from "sonner";
 
@@ -22,182 +25,342 @@ export interface Track {
   previewUrl?: string;
 }
 
-export interface Album {
-  id: string;
-  title: string;
-  artist: string;
-  artistId: string;
-  coverImage: string;
-  releaseYear: number;
-  tracks: Track[];
-}
-
-export interface Playlist {
-  id: string;
-  name: string;
-  description: string;
-  coverImage: string;
-  tracks: Track[];
-}
-
 export interface Lyrics {
   id: string;
   trackId: string;
+  synced: boolean;
   lines: Array<{
     text: string;
     time: number;
   }>;
 }
 
-// Mock data for development
-const mockArtists: Artist[] = [
-  { id: '1', name: 'Adele', imageUrl: 'https://i.scdn.co/image/ab6761610000e5eb68f6e5892075d7f22615bd17' },
-  { id: '2', name: 'The Weeknd', imageUrl: 'https://i.scdn.co/image/ab6761610000e5ebb5f9e28219c169fd4b9e8379' },
-  { id: '3', name: 'Billie Eilish', imageUrl: 'https://i.scdn.co/image/ab6761610000e5eb7b9a2ca657bb429e3afc4f8b' },
-  { id: '4', name: 'Ed Sheeran', imageUrl: 'https://i.scdn.co/image/ab6761610000e5eb9e690225ad4445530612ccc9' },
-  { id: '5', name: 'Taylor Swift', imageUrl: 'https://i.scdn.co/image/ab6761610000e5eb5a00969a4698c3132a15fbb0' },
+const FALLBACK_IMG = `${import.meta.env.BASE_URL}placeholder.svg`;
+
+// ---------------------------------------------------------------------------
+// JSONP helper (iTunes Search API supports a `callback` param on search/lookup)
+// ---------------------------------------------------------------------------
+let jsonpCounter = 0;
+
+function jsonp<T = unknown>(
+  baseUrl: string,
+  params: Record<string, string>,
+  timeoutMs = 8000
+): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const callbackName = `__upbeats_jsonp_${Date.now()}_${jsonpCounter++}`;
+    const script = document.createElement("script");
+    let settled = false;
+
+    const cleanup = () => {
+      settled = true;
+      delete (window as unknown as Record<string, unknown>)[callbackName];
+      if (script.parentNode) script.parentNode.removeChild(script);
+      clearTimeout(timer);
+    };
+
+    const timer = setTimeout(() => {
+      if (!settled) {
+        cleanup();
+        reject(new Error("JSONP request timed out"));
+      }
+    }, timeoutMs);
+
+    (window as unknown as Record<string, unknown>)[callbackName] = (data: T) => {
+      if (settled) return;
+      cleanup();
+      resolve(data);
+    };
+
+    const qs = new URLSearchParams({ ...params, callback: callbackName }).toString();
+    script.src = `${baseUrl}?${qs}`;
+    script.onerror = () => {
+      if (!settled) {
+        cleanup();
+        reject(new Error("JSONP request failed"));
+      }
+    };
+    document.head.appendChild(script);
+  });
+}
+
+interface ITunesResult {
+  wrapperType?: string;
+  kind?: string;
+  trackId?: number;
+  trackName?: string;
+  artistName?: string;
+  artistId?: number;
+  collectionName?: string;
+  artworkUrl100?: string;
+  trackTimeMillis?: number;
+  previewUrl?: string;
+}
+
+interface ITunesResponse {
+  resultCount: number;
+  results: ITunesResult[];
+}
+
+const ITUNES_SEARCH = "https://itunes.apple.com/search";
+const ITUNES_LOOKUP = "https://itunes.apple.com/lookup";
+
+function upscaleArtwork(url?: string): string {
+  if (!url) return FALLBACK_IMG;
+  // iTunes returns 100x100; request a larger version for crisp covers.
+  return url.replace(/\/\d+x\d+bb\./, "/600x600bb.");
+}
+
+function mapTrack(r: ITunesResult): Track {
+  return {
+    id: String(r.trackId),
+    title: r.trackName ?? "Unknown",
+    artist: r.artistName ?? "Unknown artist",
+    artistId: String(r.artistId ?? ""),
+    albumTitle: r.collectionName ?? "",
+    coverImage: upscaleArtwork(r.artworkUrl100),
+    duration: r.trackTimeMillis ? Math.round(r.trackTimeMillis / 1000) : 0,
+    previewUrl: r.previewUrl,
+  };
+}
+
+function isSong(r: ITunesResult): boolean {
+  return r.kind === "song" && !!r.trackId && !!r.previewUrl;
+}
+
+// ---------------------------------------------------------------------------
+// Fallback data (only used if iTunes is unreachable from the browser)
+// ---------------------------------------------------------------------------
+const FALLBACK_TRACKS: Track[] = [
+  { id: "f1", title: "Hello", artist: "Adele", artistId: "fa1", albumTitle: "25", coverImage: FALLBACK_IMG, duration: 295 },
+  { id: "f2", title: "Blinding Lights", artist: "The Weeknd", artistId: "fa2", albumTitle: "After Hours", coverImage: FALLBACK_IMG, duration: 200 },
+  { id: "f3", title: "Perfect", artist: "Ed Sheeran", artistId: "fa3", albumTitle: "÷", coverImage: FALLBACK_IMG, duration: 263 },
+  { id: "f4", title: "Believer", artist: "Imagine Dragons", artistId: "fa4", albumTitle: "Evolve", coverImage: FALLBACK_IMG, duration: 204 },
 ];
 
-const mockTracks: Track[] = [
-  { 
-    id: '1', 
-    title: 'Hello', 
-    artist: 'Adele', 
-    artistId: '1',
-    albumTitle: '25',
-    coverImage: 'https://i.scdn.co/image/ab67616d0000b2736a7874a8d05aaf3eddce428a',
-    duration: 295,
-    previewUrl: 'https://p.scdn.co/mp3-preview/0b90429fd554bad6785faa20c01f4676dab06783'
-  },
-  { 
-    id: '2', 
-    title: 'Blinding Lights', 
-    artist: 'The Weeknd', 
-    artistId: '2',
-    albumTitle: 'After Hours',
-    coverImage: 'https://i.scdn.co/image/ab67616d0000b27338cf30ffb7079c6b176edcd4',
-    duration: 200,
-    previewUrl: 'https://p.scdn.co/mp3-preview/8fbf01bca38da318c5bd7e31530b84a5e01fd61a'
-  },
-  { 
-    id: '3', 
-    title: 'bad guy', 
-    artist: 'Billie Eilish', 
-    artistId: '3',
-    albumTitle: 'WHEN WE ALL FALL ASLEEP, WHERE DO WE GO?',
-    coverImage: 'https://i.scdn.co/image/ab67616d0000b2732a038d3bf875d23e4aeaa84e',
-    duration: 194,
-    previewUrl: 'https://p.scdn.co/mp3-preview/aded12066992fedc27cb12a5583b3574324e3c5f'
-  },
-  { 
-    id: '4', 
-    title: 'Shape of You', 
-    artist: 'Ed Sheeran', 
-    artistId: '4',
-    albumTitle: '÷ (Divide)',
-    coverImage: 'https://i.scdn.co/image/ab67616d0000b273ba5db46f4b838ef6027e6f96',
-    duration: 233,
-    previewUrl: 'https://p.scdn.co/mp3-preview/00f79b004d1162abc0f5955e9ea92db0784dd3b8'
-  },
-  { 
-    id: '5', 
-    title: 'Anti-Hero', 
-    artist: 'Taylor Swift', 
-    artistId: '5',
-    albumTitle: 'Midnights',
-    coverImage: 'https://i.scdn.co/image/ab67616d0000b273bb54dde68cd23e2a268ae0f5',
-    duration: 200,
-    previewUrl: 'https://p.scdn.co/mp3-preview/91c4e809e4ee0729bec008c1a9a8ab005ba35ab6'
-  },
-  { 
-    id: '6', 
-    title: 'Easy On Me', 
-    artist: 'Adele', 
-    artistId: '1',
-    albumTitle: '30',
-    coverImage: 'https://i.scdn.co/image/ab67616d0000b273a7a0fcfd9441d7a404a9cf73',
-    duration: 224,
-    previewUrl: 'https://p.scdn.co/mp3-preview/425a3f38d413fb7752c7d142f9b0f9a19889a0f8'
-  },
+const FALLBACK_ARTISTS: Artist[] = [
+  { id: "fa1", name: "Adele", imageUrl: FALLBACK_IMG },
+  { id: "fa2", name: "The Weeknd", imageUrl: FALLBACK_IMG },
+  { id: "fa3", name: "Ed Sheeran", imageUrl: FALLBACK_IMG },
+  { id: "fa4", name: "Imagine Dragons", imageUrl: FALLBACK_IMG },
 ];
 
-const mockLyrics: Record<string, Lyrics> = {
-  '1': {
-    id: 'lyrics-1',
-    trackId: '1',
-    lines: [
-      { text: 'Hello, it\'s me', time: 0 },
-      { text: 'I was wondering if after all these years', time: 5 },
-      { text: 'You\'d like to meet, to go over everything', time: 10 },
-      { text: 'They say that time\'s supposed to heal ya', time: 15 },
-      { text: 'But I ain\'t done much healing', time: 20 },
-      { text: 'Hello, can you hear me?', time: 25 },
-      { text: 'I\'m in California dreaming about who we used to be', time: 30 },
-      { text: 'When we were younger and free', time: 35 },
-      { text: 'I\'ve forgotten how it felt before the world fell at our feet', time: 40 },
-    ]
-  },
-  '2': {
-    id: 'lyrics-2',
-    trackId: '2',
-    lines: [
-      { text: 'Yeah', time: 0 },
-      { text: 'I\'ve been tryna call', time: 5 },
-      { text: 'I\'ve been on my own for long enough', time: 10 },
-      { text: 'Maybe you can show me how to love, maybe', time: 15 },
-      { text: 'I\'m going through withdrawals', time: 20 },
-      { text: 'You don\'t even have to do too much', time: 25 },
-      { text: 'You can turn me on with just a touch, baby', time: 30 },
-      { text: 'I look around and', time: 35 },
-      { text: 'Sin City\'s cold and empty', time: 40 },
-      { text: 'No one\'s around to judge me', time: 45 },
-      { text: 'I can\'t see clearly when you\'re gone', time: 50 },
-    ]
+// Curated, karaoke-friendly songs with strong LRCLIB lyric coverage.
+const CURATED_QUERIES = [
+  "Adele Hello",
+  "The Weeknd Blinding Lights",
+  "Ed Sheeran Perfect",
+  "Imagine Dragons Believer",
+  "Queen Bohemian Rhapsody",
+  "John Legend All of Me",
+  "Bruno Mars Just the Way You Are",
+  "Coldplay Yellow",
+];
+
+const POPULAR_ARTIST_NAMES = [
+  "Adele",
+  "The Weeknd",
+  "Ed Sheeran",
+  "Taylor Swift",
+  "Bruno Mars",
+  "Coldplay",
+];
+
+// ---------------------------------------------------------------------------
+// Public API
+// ---------------------------------------------------------------------------
+export const getPopularArtists = async (): Promise<Artist[]> => {
+  try {
+    const results = await Promise.all(
+      POPULAR_ARTIST_NAMES.map(async (name) => {
+        try {
+          const res = await jsonp<ITunesResponse>(ITUNES_SEARCH, {
+            term: name,
+            entity: "song",
+            limit: "1",
+          });
+          const r = res.results?.[0];
+          if (!r) return null;
+          return {
+            id: String(r.artistId ?? name),
+            name: r.artistName ?? name,
+            imageUrl: upscaleArtwork(r.artworkUrl100),
+          } as Artist;
+        } catch {
+          return null;
+        }
+      })
+    );
+    const artists = results.filter((a): a is Artist => a !== null);
+    return artists.length ? artists : FALLBACK_ARTISTS;
+  } catch {
+    return FALLBACK_ARTISTS;
   }
 };
 
-// Mock API functions
-
-export const getPopularArtists = async (): Promise<Artist[]> => {
-  // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 500));
-  return mockArtists;
-};
-
 export const getTopTracks = async (): Promise<Track[]> => {
-  // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 300));
-  return mockTracks;
+  try {
+    const results = await Promise.all(
+      CURATED_QUERIES.map(async (query) => {
+        try {
+          const res = await jsonp<ITunesResponse>(ITUNES_SEARCH, {
+            term: query,
+            entity: "song",
+            limit: "1",
+          });
+          const r = res.results?.find(isSong);
+          return r ? mapTrack(r) : null;
+        } catch {
+          return null;
+        }
+      })
+    );
+    const tracks = results.filter((t): t is Track => t !== null);
+    return tracks.length ? tracks : FALLBACK_TRACKS;
+  } catch {
+    return FALLBACK_TRACKS;
+  }
 };
 
 export const getTrackById = async (trackId: string): Promise<Track | undefined> => {
-  // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 200));
-  return mockTracks.find(track => track.id === trackId);
-};
-
-export const getLyricsByTrackId = async (trackId: string): Promise<Lyrics | undefined> => {
-  // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 300));
-  return mockLyrics[trackId];
+  if (!trackId) return undefined;
+  try {
+    const res = await jsonp<ITunesResponse>(ITUNES_LOOKUP, { id: trackId });
+    const r = res.results?.[0];
+    if (r && r.trackId) return mapTrack(r);
+  } catch {
+    /* fall through to fallback */
+  }
+  return FALLBACK_TRACKS.find((t) => t.id === trackId);
 };
 
 export const searchTracks = async (query: string): Promise<Track[]> => {
-  // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 400));
-  
   if (!query.trim()) return [];
-  
-  const lowercasedQuery = query.toLowerCase();
-  return mockTracks.filter(
-    track => 
-      track.title.toLowerCase().includes(lowercasedQuery) || 
-      track.artist.toLowerCase().includes(lowercasedQuery)
-  );
+  try {
+    const res = await jsonp<ITunesResponse>(ITUNES_SEARCH, {
+      term: query,
+      entity: "song",
+      limit: "25",
+    });
+    return (res.results ?? []).filter(isSong).map(mapTrack);
+  } catch {
+    const q = query.toLowerCase();
+    return FALLBACK_TRACKS.filter(
+      (t) => t.title.toLowerCase().includes(q) || t.artist.toLowerCase().includes(q)
+    );
+  }
+};
+
+// Find a single best-matching track for a free-text query (used by Library rows).
+export const findTrack = async (query: string): Promise<Track | undefined> => {
+  const results = await searchTracks(query);
+  return results[0];
+};
+
+// ---------------------------------------------------------------------------
+// Lyrics (LRCLIB) with LRC parsing
+// ---------------------------------------------------------------------------
+interface LrclibResponse {
+  syncedLyrics?: string | null;
+  plainLyrics?: string | null;
+}
+
+function parseLrc(lrc: string): Array<{ text: string; time: number }> {
+  const timeTag = /\[(\d+):(\d+)(?:\.(\d+))?\]/g;
+  const out: Array<{ text: string; time: number }> = [];
+
+  for (const rawLine of lrc.split("\n")) {
+    timeTag.lastIndex = 0;
+    const times: number[] = [];
+    let match: RegExpExecArray | null;
+    while ((match = timeTag.exec(rawLine)) !== null) {
+      const minutes = parseInt(match[1], 10);
+      const seconds = parseInt(match[2], 10);
+      const frac = match[3]
+        ? parseInt(match[3].padEnd(3, "0").slice(0, 3), 10) / 1000
+        : 0;
+      times.push(minutes * 60 + seconds + frac);
+    }
+    if (!times.length) continue;
+    const text = rawLine.replace(timeTag, "").trim();
+    for (const time of times) {
+      out.push({ text: text || "♪", time });
+    }
+  }
+  out.sort((a, b) => a.time - b.time);
+  return out;
+}
+
+async function fetchLrclib(track: Track): Promise<LrclibResponse | null> {
+  // Primary: exact get
+  const getParams = new URLSearchParams({
+    track_name: track.title,
+    artist_name: track.artist,
+  });
+  if (track.albumTitle) getParams.set("album_name", track.albumTitle);
+  if (track.duration) getParams.set("duration", String(track.duration));
+
+  try {
+    const res = await fetch(`https://lrclib.net/api/get?${getParams.toString()}`, {
+      headers: { Accept: "application/json" },
+    });
+    if (res.ok) {
+      const data = (await res.json()) as LrclibResponse;
+      if (data.syncedLyrics || data.plainLyrics) return data;
+    }
+  } catch {
+    /* try search next */
+  }
+
+  // Fallback: fuzzy search
+  try {
+    const q = new URLSearchParams({
+      track_name: track.title,
+      artist_name: track.artist,
+    });
+    const res = await fetch(`https://lrclib.net/api/search?${q.toString()}`, {
+      headers: { Accept: "application/json" },
+    });
+    if (res.ok) {
+      const list = (await res.json()) as LrclibResponse[];
+      const best = list.find((l) => l.syncedLyrics) ?? list[0];
+      if (best) return best;
+    }
+  } catch {
+    /* give up */
+  }
+
+  return null;
+}
+
+export const getLyricsByTrackId = async (
+  trackId: string
+): Promise<Lyrics | undefined> => {
+  const track = await getTrackById(trackId);
+  if (!track) return undefined;
+
+  const data = await fetchLrclib(track);
+  if (!data) return undefined;
+
+  if (data.syncedLyrics) {
+    const lines = parseLrc(data.syncedLyrics);
+    if (lines.length) {
+      return { id: `lyrics-${trackId}`, trackId, synced: true, lines };
+    }
+  }
+
+  if (data.plainLyrics) {
+    // No timing available: show plain lines without sync.
+    const lines = data.plainLyrics
+      .split("\n")
+      .map((text) => ({ text: text.trim() || "♪", time: 0 }));
+    return { id: `lyrics-${trackId}`, trackId, synced: false, lines };
+  }
+
+  return undefined;
 };
 
 export const authenticateSpotify = async () => {
-  // In a real implementation, this would redirect to Spotify auth
-  toast("Spotify authentication is mocked for demo purposes");
+  toast("Authentication is not required — using iTunes & LRCLIB public APIs.");
   return true;
 };

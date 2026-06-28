@@ -7,6 +7,7 @@ export default {
     karaoke: 'Modo Karaokê',
     songs: 'Músicas',
     playlists: {
+      title: 'Playlists',
       liked: 'Músicas Curtidas',
       recent: 'Tocadas Recentemente',
       new: 'Nova Playlist'
@@ -49,7 +50,9 @@ export default {
     back: 'Voltar',
     playingNow: 'Reproduzindo Agora',
     noLyrics: 'Letras Indisponíveis',
-    noLyricsDesc: 'As letras desta música não estão disponíveis no momento.',
+    noLyricsDesc: 'As letras sincronizadas desta música não estão disponíveis no momento.',
+    loadingLyrics: 'Carregando letras...',
+    previewNote: 'Reproduzindo uma prévia de 30 segundos — as letras sincronizam com a prévia.',
     selectSong: 'Selecione uma música para iniciar o karaokê',
     searchSongs: 'Buscar Músicas',
     suggestedSongs: 'Músicas Sugeridas',
@@ -68,6 +71,9 @@ export default {
     chooseFromSuggested: 'Escolha entre as músicas sugeridas ou busque mais'
   },
   player: {
-    playbackError: 'Erro ao reproduzir esta faixa'
+    playbackError: 'Erro ao reproduzir esta faixa',
+    noPreview: 'Nenhuma prévia de áudio disponível para esta faixa',
+    selectSong: 'Selecione uma música',
+    artistName: 'Nome do artista'
   }
 };

@@ -6,6 +6,7 @@ export default {
     karaoke: 'Modo Karaoke',
     songs: 'Canciones',
     playlists: {
+      title: 'Listas',
       liked: 'Canciones Favoritas',
       recent: 'Reproducidas Recientemente',
       new: 'Nueva Lista'
@@ -48,9 +49,30 @@ export default {
     back: 'Volver',
     playingNow: 'Reproduciendo Ahora',
     noLyrics: 'Letras No Disponibles',
-    noLyricsDesc: 'Las letras de esta canción no están disponibles en este momento.',
+    noLyricsDesc: 'Las letras sincronizadas de esta canción no están disponibles en este momento.',
+    loadingLyrics: 'Cargando letras...',
+    previewNote: 'Reproduciendo una vista previa de 30 segundos — las letras se sincronizan con la vista previa.',
     selectSong: 'Selecciona una canción para comenzar el karaoke',
     searchSongs: 'Buscar Canciones',
-    suggestedSongs: 'Canciones Sugeridas'
+    suggestedSongs: 'Canciones Sugeridas',
+    micEnabled: 'Micrófono habilitado',
+    micDisabled: 'Micrófono deshabilitado',
+    micPermissionDenied: 'Permiso de micrófono denegado',
+    micOn: 'Mic Activado',
+    micOff: 'Mic Desactivado'
+  },
+  common: {
+    play: 'Reproducir',
+    pause: 'Pausar',
+    stop: 'Detener',
+    next: 'Siguiente',
+    previous: 'Anterior',
+    chooseFromSuggested: 'Elige entre las canciones sugeridas o busca más'
+  },
+  player: {
+    playbackError: 'Error al reproducir esta pista',
+    noPreview: 'No hay vista previa de audio disponible para esta pista',
+    selectSong: 'Selecciona una canción',
+    artistName: 'Nombre del artista'
   }
 };

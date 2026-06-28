@@ -15,12 +15,14 @@ interface KaraokePlayerProps {
   lyrics: Lyric[];
   currentTime: number;
   isPlaying: boolean;
+  synced?: boolean;
 }
 
-const KaraokePlayer: React.FC<KaraokePlayerProps> = ({ 
-  lyrics, 
-  currentTime, 
-  isPlaying 
+const KaraokePlayer: React.FC<KaraokePlayerProps> = ({
+  lyrics,
+  currentTime,
+  isPlaying,
+  synced = true,
 }) => {
   const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -30,6 +32,7 @@ const KaraokePlayer: React.FC<KaraokePlayerProps> = ({
 
   // Effect to track the active lyric based on currentTime
   useEffect(() => {
+    if (!synced) return;
     const newActiveLyricIndex = lyrics.findIndex((lyric, index) => {
       const nextLyric = lyrics[index + 1];
       if (nextLyric) {
@@ -41,10 +44,11 @@ const KaraokePlayer: React.FC<KaraokePlayerProps> = ({
     if (newActiveLyricIndex !== -1 && newActiveLyricIndex !== activeLyricIndex) {
       setActiveLyricIndex(newActiveLyricIndex);
     }
-  }, [currentTime, lyrics, activeLyricIndex]);
+  }, [currentTime, lyrics, activeLyricIndex, synced]);
 
   // Effect to scroll to active lyric
   useEffect(() => {
+    if (!synced) return;
     if (containerRef.current && activeLyricIndex >= 0) {
       const lyricElements = containerRef.current.querySelectorAll('.lyrics');
       if (lyricElements[activeLyricIndex]) {
@@ -54,7 +58,7 @@ const KaraokePlayer: React.FC<KaraokePlayerProps> = ({
         });
       }
     }
-  }, [activeLyricIndex]);
+  }, [activeLyricIndex, synced]);
 
   // Microphone handling
   const toggleMicrophone = async () => {
@@ -125,8 +129,8 @@ const KaraokePlayer: React.FC<KaraokePlayerProps> = ({
           <div 
             key={index} 
             className={cn(
-              "lyrics text-center transition-all", 
-              activeLyricIndex === index && "active"
+              "lyrics text-center transition-all",
+              synced && activeLyricIndex === index && "active"
             )}
           >
             {lyric.text}
