@@ -82,8 +82,14 @@
   opacity: 1;
   font-size: 1.2em;
   font-weight: bold;
-  color: theme('colors.upbeats.400');
-  text-shadow: 0 0 8px rgba(255,255,255,0.5);
+}
+
+/* Karaoke-style progressive fill on the active line: the gradient stops are
+   set inline from the playback position; here we only clip it to the text. */
+.lyricFill {
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .visualizer {

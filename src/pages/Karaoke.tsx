@@ -171,6 +171,7 @@ const Karaoke = () => {
                   synced={lyrics.synced}
                   currentTime={displayTime}
                   isPlaying={isThisTrackCurrent && isPlaying}
+                  trackId={track.id}
                 />
               ) : (
                 <div className="bg-secondary/20 rounded-lg p-6 text-center">

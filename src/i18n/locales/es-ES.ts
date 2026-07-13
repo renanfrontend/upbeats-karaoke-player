@@ -51,7 +51,7 @@ export default {
     noLyrics: 'Letras No Disponibles',
     noLyricsDesc: 'Las letras sincronizadas de esta canción no están disponibles en este momento.',
     loadingLyrics: 'Cargando letras...',
-    previewNote: 'Reproduciendo una vista previa de 30 segundos — las letras se sincronizan con la vista previa.',
+    previewNote: 'Reproduciendo una vista previa de 30 segundos — toca la línea que se canta para calibrar la letra.',
     selectSong: 'Selecciona una canción para comenzar el karaoke',
     searchSongs: 'Buscar Canciones',
     suggestedSongs: 'Canciones Sugeridas',
@@ -59,7 +59,18 @@ export default {
     micDisabled: 'Micrófono deshabilitado',
     micPermissionDenied: 'Permiso de micrófono denegado',
     micOn: 'Mic Activado',
-    micOff: 'Mic Desactivado'
+    micOff: 'Mic Desactivado',
+    micVolume: 'Volumen del mic',
+    vocalRemoval: 'Quitar Voz',
+    vocalRemovalDesc: 'Reduce la voz original para que cantes sobre la melodía',
+    vocalRemovalUnsupported: 'La eliminación de voz no está disponible para esta pista',
+    vocalLevel: 'Reducción',
+    lyricsSync: 'Ajustar letra',
+    lyricsEarlier: 'Adelantar letra',
+    lyricsLater: 'Retrasar letra',
+    lyricsSyncReset: 'Restablecer ajuste',
+    lyricsSynced: '¡Letra sincronizada!',
+    tapToSync: 'Consejo: toca la línea que se está cantando para calibrar la letra'
   },
   common: {
     play: 'Reproducir',

@@ -52,7 +52,7 @@ export default {
     noLyrics: 'No Lyrics Available',
     noLyricsDesc: 'Synced lyrics for this song are not available at the moment.',
     loadingLyrics: 'Loading lyrics...',
-    previewNote: 'Playing a 30-second preview — lyrics sync to the preview.',
+    previewNote: 'Playing a 30-second preview — tap the line being sung to calibrate the lyrics.',
     selectSong: 'Select a song to start karaoke',
     searchSongs: 'Search for Songs',
     suggestedSongs: 'Suggested Songs',
@@ -60,7 +60,18 @@ export default {
     micDisabled: 'Microphone disabled',
     micPermissionDenied: 'Microphone permission denied',
     micOn: 'Mic On',
-    micOff: 'Mic Off'
+    micOff: 'Mic Off',
+    micVolume: 'Mic volume',
+    vocalRemoval: 'Vocal Removal',
+    vocalRemovalDesc: 'Reduces the original voice so you can sing over the melody',
+    vocalRemovalUnsupported: 'Vocal removal is not available for this track',
+    vocalLevel: 'Reduction',
+    lyricsSync: 'Adjust lyrics',
+    lyricsEarlier: 'Lyrics earlier',
+    lyricsLater: 'Lyrics later',
+    lyricsSyncReset: 'Reset adjustment',
+    lyricsSynced: 'Lyrics synced!',
+    tapToSync: 'Tip: tap the line being sung to calibrate the lyrics'
   },
   common: {
     play: 'Play',
