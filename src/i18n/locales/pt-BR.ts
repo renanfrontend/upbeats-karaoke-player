@@ -52,7 +52,7 @@ export default {
     noLyrics: 'Letras Indisponíveis',
     noLyricsDesc: 'As letras sincronizadas desta música não estão disponíveis no momento.',
     loadingLyrics: 'Carregando letras...',
-    previewNote: 'Reproduzindo uma prévia de 30 segundos — as letras sincronizam com a prévia.',
+    previewNote: 'Reproduzindo uma prévia de 30 segundos — toque na linha sendo cantada para calibrar a letra.',
     selectSong: 'Selecione uma música para iniciar o karaokê',
     searchSongs: 'Buscar Músicas',
     suggestedSongs: 'Músicas Sugeridas',
@@ -60,7 +60,18 @@ export default {
     micDisabled: 'Microfone desabilitado',
     micPermissionDenied: 'Permissão do microfone negada',
     micOn: 'Mic Ligado',
-    micOff: 'Mic Desligado'
+    micOff: 'Mic Desligado',
+    micVolume: 'Volume do mic',
+    vocalRemoval: 'Remover Voz',
+    vocalRemovalDesc: 'Reduz a voz original para você cantar por cima da melodia',
+    vocalRemovalUnsupported: 'A remoção de voz não está disponível para esta faixa',
+    vocalLevel: 'Redução',
+    lyricsSync: 'Ajustar letra',
+    lyricsEarlier: 'Adiantar letra',
+    lyricsLater: 'Atrasar letra',
+    lyricsSyncReset: 'Zerar ajuste',
+    lyricsSynced: 'Letra sincronizada!',
+    tapToSync: 'Dica: toque na linha que está sendo cantada para calibrar a letra'
   },
   common: {
     play: 'Reproduzir',
