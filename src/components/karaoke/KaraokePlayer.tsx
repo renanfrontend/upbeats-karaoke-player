@@ -2,13 +2,12 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
-import { Mic, MicOff, MicVocal, Minus, Plus, RotateCcw } from 'lucide-react';
+import { Minus, Plus, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Slider } from '@/components/ui/slider';
-import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { usePlayer } from '@/context/PlayerContext';
-import { MicMonitor } from '@/audio/karaokeEngine';
+import { AudioVisualizer } from './AudioVisualizer';
+import VoiceControls from './VoiceControls';
 
 interface Lyric {
   text: string;
@@ -26,12 +25,29 @@ interface KaraokePlayerProps {
 
 const OFFSET_STORAGE_PREFIX = 'upbeats-lyrics-offset:';
 const OFFSET_STEP = 0.5;
+/** A silent stretch this long earns a count-in before the next line. */
+const COUNT_IN_SECONDS = 3;
 
-const loadOffset = (trackId?: string): number => {
+// localStorage throws in private mode and when site data is blocked, and the
+// lyrics have to keep working either way.
+const readStoredOffset = (trackId?: string): number => {
   if (!trackId) return 0;
-  const raw = localStorage.getItem(OFFSET_STORAGE_PREFIX + trackId);
-  const value = raw === null ? NaN : parseFloat(raw);
-  return isFinite(value) ? value : 0;
+  try {
+    const raw = localStorage.getItem(OFFSET_STORAGE_PREFIX + trackId);
+    const value = raw === null ? NaN : parseFloat(raw);
+    return isFinite(value) ? value : 0;
+  } catch {
+    return 0;
+  }
+};
+
+const writeStoredOffset = (trackId: string | undefined, value: number): void => {
+  if (!trackId) return;
+  try {
+    localStorage.setItem(OFFSET_STORAGE_PREFIX + trackId, String(value));
+  } catch {
+    /* calibration just won't survive a reload */
+  }
 };
 
 const KaraokePlayer: React.FC<KaraokePlayerProps> = ({
@@ -42,36 +58,25 @@ const KaraokePlayer: React.FC<KaraokePlayerProps> = ({
   trackId,
 }) => {
   const { t } = useTranslation();
+  const { audioEngine } = usePlayer();
   const containerRef = useRef<HTMLDivElement>(null);
-  const [micEnabled, setMicEnabled] = useState(false);
-  const [micVolume, setMicVolume] = useState(70);
-  const micMonitorRef = useRef<MicMonitor | null>(null);
+  const fillRef = useRef<HTMLSpanElement | null>(null);
 
-  const {
-    karaokeMode,
-    vocalReduction,
-    karaokeSupported,
-    setKaraokeMode,
-    setVocalReduction,
-  } = usePlayer();
-
-  // Per-song lyric calibration: shifts lyric timestamps relative to the audio.
-  const [offset, setOffset] = useState(() => loadOffset(trackId));
+  // Per-song lyric calibration: shifts lyric timestamps against the audio.
+  const [offset, setOffset] = useState(() => readStoredOffset(trackId));
   useEffect(() => {
-    setOffset(loadOffset(trackId));
+    setOffset(readStoredOffset(trackId));
   }, [trackId]);
 
   const applyOffset = (value: number) => {
     const rounded = Math.round(value * 10) / 10;
     setOffset(rounded);
-    if (trackId) {
-      localStorage.setItem(OFFSET_STORAGE_PREFIX + trackId, String(rounded));
-    }
+    writeStoredOffset(trackId, rounded);
   };
 
   const adjustedTime = currentTime + offset;
 
-  const activeLyricIndex = useMemo(() => {
+  const activeIndex = useMemo(() => {
     if (!synced) return -1;
     let index = -1;
     for (let i = 0; i < lyrics.length; i++) {
@@ -81,171 +86,79 @@ const KaraokePlayer: React.FC<KaraokePlayerProps> = ({
     return index;
   }, [adjustedTime, lyrics, synced]);
 
-  // Progress inside the active line, used for the karaoke-style text fill.
-  const activeProgress = useMemo(() => {
-    if (activeLyricIndex < 0) return 0;
-    const line = lyrics[activeLyricIndex];
-    const next = lyrics[activeLyricIndex + 1];
-    if (!next || next.time <= line.time) return 1;
-    return Math.min(1, Math.max(0, (adjustedTime - line.time) / (next.time - line.time)));
-  }, [activeLyricIndex, adjustedTime, lyrics]);
+  // `timeupdate` only fires a few times a second, so the highlight is
+  // interpolated between reports and written straight to the DOM. Re-rendering
+  // the whole lyric list every frame would be far more expensive.
+  const anchorRef = useRef({ time: adjustedTime, at: 0 });
+  anchorRef.current = { time: adjustedTime, at: performance.now() };
 
-  // Effect to scroll to active lyric
   useEffect(() => {
-    if (!synced) return;
-    if (containerRef.current && activeLyricIndex >= 0) {
-      const lyricElements = containerRef.current.querySelectorAll('.lyrics');
-      if (lyricElements[activeLyricIndex]) {
-        lyricElements[activeLyricIndex].scrollIntoView({
-          behavior: 'smooth',
-          block: 'center'
-        });
-      }
+    if (!synced || activeIndex < 0) return;
+    const line = lyrics[activeIndex];
+    const next = lyrics[activeIndex + 1];
+    const span = fillRef.current;
+    if (!span) return;
+
+    const paint = (time: number) => {
+      const ratio =
+        !next || next.time <= line.time
+          ? 1
+          : Math.min(1, Math.max(0, (time - line.time) / (next.time - line.time)));
+      span.style.setProperty('--fill', `${ratio * 100}%`);
+    };
+
+    if (!isPlaying) {
+      paint(anchorRef.current.time);
+      return;
     }
-  }, [activeLyricIndex, synced]);
+
+    let frame = 0;
+    const tick = () => {
+      const { time, at } = anchorRef.current;
+      paint(time + (performance.now() - at) / 1000);
+      frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [activeIndex, isPlaying, lyrics, synced]);
+
+  // Scroll the active line into view.
+  useEffect(() => {
+    if (!synced || activeIndex < 0) return;
+    const lines = containerRef.current?.querySelectorAll('.lyrics');
+    lines?.[activeIndex]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [activeIndex, synced]);
+
+  // Count-in before a line that follows a long instrumental stretch.
+  const countIn = useMemo(() => {
+    if (!synced || !isPlaying) return 0;
+    const next = lyrics[activeIndex + 1];
+    if (!next) return 0;
+    const previousTime = activeIndex >= 0 ? lyrics[activeIndex].time : 0;
+    if (next.time - previousTime < COUNT_IN_SECONDS) return 0;
+    const remaining = next.time - adjustedTime;
+    if (remaining <= 0 || remaining > COUNT_IN_SECONDS) return 0;
+    return Math.ceil(remaining);
+  }, [activeIndex, adjustedTime, isPlaying, lyrics, synced]);
 
   // Tap the line being sung right now to calibrate the lyrics to the music.
   const syncToLine = (index: number) => {
-    if (!synced || !isPlaying) return;
+    if (!synced) return;
     applyOffset(lyrics[index].time - currentTime);
     toast.success(t('karaoke.lyricsSynced'));
   };
 
-  // Microphone handling: capture the singer's voice and monitor it through the
-  // speakers with a light echo (MicMonitor).
-  const toggleMicrophone = async () => {
-    try {
-      if (!micEnabled) {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          audio: { echoCancellation: true, noiseSuppression: true },
-        });
-        micMonitorRef.current = new MicMonitor(stream, micVolume / 100);
-        setMicEnabled(true);
-        toast.success(t('karaoke.micEnabled'));
-      } else {
-        micMonitorRef.current?.dispose();
-        micMonitorRef.current = null;
-        setMicEnabled(false);
-        toast.info(t('karaoke.micDisabled'));
-      }
-    } catch (err) {
-      console.error('Error accessing microphone:', err);
-      toast.error(t('karaoke.micPermissionDenied'));
-    }
-  };
-
-  useEffect(() => {
-    micMonitorRef.current?.setVolume(micVolume / 100);
-  }, [micVolume]);
-
-  useEffect(() => {
-    return () => {
-      micMonitorRef.current?.dispose();
-      micMonitorRef.current = null;
-    };
-  }, []);
-
   return (
-    <div className="bg-secondary/20 rounded-lg p-6 border border-secondary">
-      <div className="flex flex-wrap justify-between items-center gap-3 mb-4">
-        <h2 className="text-xl font-semibold">{t('karaoke.title')}</h2>
-        <Button
-          onClick={toggleMicrophone}
-          variant={micEnabled ? "default" : "outline"}
-          size="sm"
-          className={micEnabled ? "bg-upbeats-500 hover:bg-upbeats-600" : ""}
-        >
-          {micEnabled ? (
-            <>
-              <Mic className="h-5 w-5 mr-2" />
-              {t('karaoke.micOn')}
-            </>
-          ) : (
-            <>
-              <MicOff className="h-5 w-5 mr-2" />
-              {t('karaoke.micOff')}
-            </>
-          )}
-        </Button>
-      </div>
+    <div className="bg-secondary/20 rounded-lg p-4 md:p-6 border border-secondary space-y-4">
+      <h2 className="text-xl font-semibold">{t('karaoke.title')}</h2>
 
-      {/* Vocal removal controls */}
-      <div className="rounded-lg bg-secondary/30 p-4 mb-4 space-y-3">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2 min-w-0">
-            <MicVocal className="h-5 w-5 text-upbeats-400 shrink-0" />
-            <div className="min-w-0">
-              <p className="font-medium leading-tight">{t('karaoke.vocalRemoval')}</p>
-              <p className="text-xs text-muted-foreground truncate">
-                {karaokeSupported
-                  ? t('karaoke.vocalRemovalDesc')
-                  : t('karaoke.vocalRemovalUnsupported')}
-              </p>
-            </div>
-          </div>
-          <Switch
-            checked={karaokeMode}
-            disabled={!karaokeSupported}
-            onCheckedChange={setKaraokeMode}
-          />
-        </div>
-        {karaokeMode && (
-          <div className="flex items-center gap-3">
-            <span className="text-xs text-muted-foreground whitespace-nowrap">
-              {t('karaoke.vocalLevel')}
-            </span>
-            <Slider
-              value={[vocalReduction]}
-              min={30}
-              max={100}
-              step={5}
-              className="flex-1"
-              onValueChange={(v) => setVocalReduction(v[0])}
-            />
-            <span className="text-xs text-muted-foreground w-9 text-right">
-              {vocalReduction}%
-            </span>
-          </div>
-        )}
-        {micEnabled && (
-          <div className="flex items-center gap-3">
-            <span className="text-xs text-muted-foreground whitespace-nowrap">
-              {t('karaoke.micVolume')}
-            </span>
-            <Slider
-              value={[micVolume]}
-              max={100}
-              step={1}
-              className="flex-1"
-              onValueChange={(v) => setMicVolume(v[0])}
-            />
-            <span className="text-xs text-muted-foreground w-9 text-right">
-              {micVolume}%
-            </span>
-          </div>
-        )}
-      </div>
+      <VoiceControls />
 
-      {/* Audio Visualizer */}
-      <div className="visualizer mb-4">
-        {Array.from({ length: 20 }).map((_, i) => (
-          <span
-            key={i}
-            className={cn(
-              "transition-all duration-100",
-              isPlaying ? `animate-wave-${(i % 3) + 1}` : "h-1"
-            )}
-            style={{
-              height: isPlaying ? `${Math.random() * 30 + 5}px` : "3px",
-              animationDelay: `${i * 0.05}s`
-            }}
-          />
-        ))}
-      </div>
+      <AudioVisualizer engine={audioEngine} active={isPlaying} />
 
       {/* Lyrics calibration */}
       {synced && (
-        <div className="flex flex-wrap items-center justify-center gap-2 mb-3 text-xs text-muted-foreground">
+        <div className="flex flex-wrap items-center justify-center gap-2 text-xs text-muted-foreground">
           <span>{t('karaoke.lyricsSync')}</span>
           <Button
             variant="outline"
@@ -256,7 +169,7 @@ const KaraokePlayer: React.FC<KaraokePlayerProps> = ({
           >
             <Minus className="h-3.5 w-3.5" />
           </Button>
-          <span className="w-12 text-center font-mono">
+          <span className="w-12 text-center font-mono tabular-nums">
             {offset > 0 ? '+' : ''}{offset.toFixed(1)}s
           </span>
           <Button
@@ -279,33 +192,33 @@ const KaraokePlayer: React.FC<KaraokePlayerProps> = ({
               <RotateCcw className="h-3.5 w-3.5" />
             </Button>
           )}
-          <span className="basis-full text-center opacity-70">
-            {t('karaoke.tapToSync')}
-          </span>
+          <span className="basis-full text-center opacity-70">{t('karaoke.tapToSync')}</span>
         </div>
       )}
 
-      {/* Lyrics Display */}
+      {/* Count-in dots */}
+      <div className="h-4 flex items-center justify-center gap-2" aria-hidden="true">
+        {Array.from({ length: countIn }).map((_, i) => (
+          <span key={i} className="h-2.5 w-2.5 rounded-full bg-upbeats-400 animate-pulse" />
+        ))}
+      </div>
+
+      {/* Lyrics */}
       <div ref={containerRef} className="lyricsContainer scrollbar-hidden">
         {lyrics.map((lyric, index) => {
-          const isActive = synced && activeLyricIndex === index;
+          const isActive = synced && activeIndex === index;
           return (
             <div
               key={index}
               onClick={() => syncToLine(index)}
               className={cn(
-                "lyrics text-center transition-all",
-                synced && isPlaying && "cursor-pointer hover:opacity-80",
-                isActive && "active"
+                'lyrics text-center transition-all',
+                synced && 'cursor-pointer hover:opacity-80',
+                isActive && 'active'
               )}
             >
               {isActive ? (
-                <span
-                  className="lyricFill"
-                  style={{
-                    backgroundImage: `linear-gradient(90deg, #9b75ff ${activeProgress * 100}%, rgba(255,255,255,0.45) ${activeProgress * 100}%)`,
-                  }}
-                >
+                <span ref={fillRef} className="lyricFill">
                   {lyric.text}
                 </span>
               ) : (
