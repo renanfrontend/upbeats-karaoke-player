@@ -333,14 +333,14 @@ async function fetchLrclib(track: Track): Promise<LrclibResponse | null> {
   return null;
 }
 
-export const getLyricsByTrackId = async (
-  trackId: string
+/** Look up lyrics for a track we already have metadata for (incl. local files). */
+export const getLyricsForTrack = async (
+  track: Track
 ): Promise<Lyrics | undefined> => {
-  const track = await getTrackById(trackId);
-  if (!track) return undefined;
-
   const data = await fetchLrclib(track);
   if (!data) return undefined;
+
+  const trackId = track.id;
 
   if (data.syncedLyrics) {
     const lines = parseLrc(data.syncedLyrics);
@@ -358,6 +358,14 @@ export const getLyricsByTrackId = async (
   }
 
   return undefined;
+};
+
+export const getLyricsByTrackId = async (
+  trackId: string
+): Promise<Lyrics | undefined> => {
+  const track = await getTrackById(trackId);
+  if (!track) return undefined;
+  return getLyricsForTrack(track);
 };
 
 export const authenticateSpotify = async () => {

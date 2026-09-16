@@ -84,9 +84,16 @@
   font-weight: bold;
 }
 
-/* Karaoke-style progressive fill on the active line: the gradient stops are
-   set inline from the playback position; here we only clip it to the text. */
+/* Karaoke-style progressive fill on the active line. `--fill` is written each
+   animation frame from the playback position; the gradient is clipped to the
+   glyphs so the words colour in as they are sung. */
 .lyricFill {
+  --fill: 0%;
+  background-image: linear-gradient(
+    90deg,
+    theme('colors.upbeats.300') var(--fill),
+    rgba(255, 255, 255, 0.42) var(--fill)
+  );
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -100,37 +107,15 @@
   height: 60px;
 }
 
+/* Heights are written per frame from the analyser, so no CSS animation here. */
 .visualizer span {
   display: block;
   width: 5px;
-  height: 5px;
-  background: theme('colors.upbeats.500');
+  height: 3px;
+  background: linear-gradient(
+    to top,
+    theme('colors.upbeats.600'),
+    theme('colors.upbeats.300')
+  );
   border-radius: 2px;
-}
-
-@keyframes wave-1 {
-  0%, 100% { height: 5px; }
-  50% { height: 20px; }
-}
-
-@keyframes wave-2 {
-  0%, 100% { height: 8px; }
-  50% { height: 30px; }
-}
-
-@keyframes wave-3 {
-  0%, 100% { height: 12px; }
-  50% { height: 25px; }
-}
-
-.animate-wave-1 {
-  animation: wave-1 0.5s infinite;
-}
-
-.animate-wave-2 {
-  animation: wave-2 0.7s infinite;
-}
-
-.animate-wave-3 {
-  animation: wave-3 0.6s infinite;
 }
