@@ -84,6 +84,17 @@ npm run build
 O build vai para `dist/`. Cada push na `main` publica no GitHub Pages
 (`.github/workflows/deploy.yml`).
 
+## Marca
+
+O logo fica em [`brand/`](brand), em vetor (`svg/`) e PNG com fundo transparente (`png/`):
+
+- **Ícone**, **horizontal** (ícone + nome) e **empilhado** (ícone em cima), cada um em versão para
+  fundo escuro e para fundo claro (com contorno escuro na caveira).
+- O texto "UP! BEATS" está em contorno vetorial (Montserrat Black, licença OFL): não depende de
+  fonte instalada.
+- No app: `public/logo.svg` (menu), `public/favicon.svg` e `favicon.png` (aba do navegador) e
+  `public/apple-touch-icon.png` (atalho no iPhone, com fundo sólido).
+
 ## Autor
 
 **Renan Augusto**, desenvolvedor frontend sênior · [renanaugusto.com.br](https://www.renanaugusto.com.br) ·
