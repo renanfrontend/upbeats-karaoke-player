@@ -10,10 +10,12 @@ interface AppLogoProps {
 const AppLogo: React.FC<AppLogoProps> = ({ className, showText = true }) => {
   return (
     <div className={cn("flex items-center gap-2", className)}>
-      <img 
-        src={`${import.meta.env.BASE_URL}lovable-uploads/ff5efa7d-7ff2-451d-bb51-e0444e8f4675.png`} 
-        alt="Up! Beats Logo" 
-        className="h-10 w-auto" 
+      <img
+        src={`${import.meta.env.BASE_URL}logo.svg`}
+        alt="UP! BEATS"
+        width={40}
+        height={40}
+        className="h-10 w-10"
       />
       {showText && (
         <div className="flex flex-col">

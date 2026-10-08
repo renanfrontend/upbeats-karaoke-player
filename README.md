@@ -1,52 +1,101 @@
+# UP! BEATS Karaokê
 
+Karaokê que roda direto no navegador: busque uma música, acompanhe a **letra sincronizada**, tire a
+**voz original em tempo real** e cante com o **seu microfone**, com eco e retorno de áudio.
 
+**Acesse:** https://renanfrontend.github.io/upbeats-karaoke-player/
 
-## How can I edit this code?
+![UP! BEATS Karaokê: controles de voz original e microfone](public/og-image.png)
 
-There are several ways of editing your application.
+## O que dá para fazer
 
+- **Buscar músicas** e abrir qualquer faixa no modo karaokê (prévias de 30 s da API do iTunes).
+- **Cantar com a letra sincronizada** linha a linha (LRCLIB). Se a letra estiver adiantada ou
+  atrasada, basta tocar na linha que está sendo cantada para calibrar. O ajuste fica salvo por música.
+- **Controlar a voz original**: *Original*, *Guia* (voz baixinha, só para orientar) ou *Karaokê*
+  (voz removida), com um controle fino de nível.
+- **Cantar com o microfone** ouvindo a própria voz junto com a música, com volume, eco e medidor de
+  nível. Há dois modos: **caixas de som** (cancelamento de eco ligado, para evitar microfonia) e
+  **fones** (voz mais natural).
+- **Cantar com a sua música**: abra um arquivo do seu aparelho para tocar a faixa inteira. Como o
+  arquivo é local, o controle de voz sempre funciona.
+- Interface em **português, inglês e espanhol**, com músicas curtidas e tocadas recentemente.
 
-**Use your preferred IDE**
+## Como a remoção de voz funciona
 
+Todo o áudio passa por **um único grafo da Web Audio API** (`src/audio/karaokeEngine.ts`), então a
+música e o microfone são mixados pelo próprio navegador e ficam sincronizados:
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+```text
+<audio> ─► fonte ─┬─► original ─────────────────────────────┐
+                  ├─► (E − D) lateral ──┐                    │
+                  ├─► passa-baixa 130 Hz ┼─► instrumental ───┤
+                  └─► passa-alta 8,5 kHz ┘                   ├─► música ─┐
+                                                                         ├─► saída
+mic ─► fonte ─► passa-alta 80 Hz ─► compressor ─► ganho ─┬─► seco ─┐     │
+                                                         └─► eco ──┴─► mic ┘
+```
 
-Follow these steps:
+- A voz principal quase sempre fica **no centro do estéreo** (igual nos dois canais). Subtrair o
+  canal direito do esquerdo (E − D) cancela a voz e mantém os instrumentos abertos nas laterais.
+- Grave e bumbo também ficam no centro, então eles voltam por filtros em cascata (4ª ordem) que ficam
+  fora da faixa da voz, junto com o brilho dos pratos.
+- O controle de voz faz um *crossfade* entre a mixagem original e a instrumental, mantendo o volume
+  constante. Mudanças usam rampas curtas para não estalar.
+- No microfone: corte de graves e plosivas, compressor contra picos e microfonia, e um *delay* com
+  realimentação para o eco de "salão de karaokê".
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+**Limitação conhecida:** a técnica depende de a voz estar no centro da mixagem. Em gravações com voz
+estéreo, efeitos largos ou ao vivo, sobra um pouco da voz original. Prévias de streaming de outros
+domínios também podem bloquear o processamento de áudio (CORS); para esses casos existe o
+"Cantar com minha música".
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+## Tecnologias
 
-# Step 3: Install the necessary dependencies.
-npm i
+- React 18, TypeScript e Vite
+- Web Audio API (remoção de voz, mixagem, análise de espectro e medidor do microfone)
+- Tailwind CSS e shadcn/ui
+- TanStack Query (cache das buscas e das letras)
+- React Router (HashRouter, compatível com GitHub Pages)
+- i18next (pt-BR, en, es)
+- Deploy automático no GitHub Pages com GitHub Actions
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+### Dados de terceiros
+
+- [iTunes Search API](https://performance-partners.apple.com/search-api): busca, capas e prévias de 30 s.
+- [LRCLIB](https://lrclib.net): letras sincronizadas, API aberta.
+
+Músicas, capas e letras pertencem aos seus respectivos donos e são exibidas só como demonstração.
+
+## Rodando localmente
+
+```bash
+npm ci
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+O app abre em `http://localhost:8080/upbeats-karaoke-player/`. O microfone exige `localhost` ou
+HTTPS (regra dos navegadores para `getUserMedia`).
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```bash
+npm run build
+```
 
-**Use GitHub Codespaces**
+O build vai para `dist/`. Cada push na `main` publica no GitHub Pages
+(`.github/workflows/deploy.yml`).
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Marca
 
-## What technologies are used for this project?
+O logo fica em [`brand/`](brand), em vetor (`svg/`) e PNG com fundo transparente (`png/`):
 
-This project is built with:
+- **Ícone**, **horizontal** (ícone + nome) e **empilhado** (ícone em cima), cada um em versão para
+  fundo escuro e para fundo claro (com contorno escuro na caveira).
+- O texto "UP! BEATS" está em contorno vetorial (Montserrat Black, licença OFL): não depende de
+  fonte instalada.
+- No app: `public/logo.svg` (menu), `public/favicon.svg` e `favicon.png` (aba do navegador) e
+  `public/apple-touch-icon.png` (atalho no iPhone, com fundo sólido).
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## Autor
+
+**Renan Augusto**, desenvolvedor frontend sênior · [renanaugusto.com.br](https://www.renanaugusto.com.br) ·
+[LinkedIn](https://www.linkedin.com/in/renan-augusto-santos/) · Up Technology Innovations

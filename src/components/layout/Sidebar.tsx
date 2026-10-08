@@ -21,6 +21,9 @@ const Sidebar: React.FC = () => {
     i18n.changeLanguage(lng);
   };
 
+  // O detector devolve "pt-BR", "en-US"...; o idioma resolvido é o recurso realmente em uso.
+  const currentLanguage = (i18n.resolvedLanguage ?? i18n.language ?? "pt").slice(0, 2);
+
   const closeMobile = () => setMobileOpen(false);
 
   const navLinkClass = ({ isActive }: { isActive: boolean }) =>
@@ -81,7 +84,7 @@ const Sidebar: React.FC = () => {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="w-full justify-start gap-2">
               <Globe className="h-4 w-4" />
-              {i18n.language === 'pt' ? 'Português' : i18n.language === 'es' ? 'Español' : 'English'}
+              {currentLanguage === 'pt' ? 'Português' : currentLanguage === 'es' ? 'Español' : 'English'}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>

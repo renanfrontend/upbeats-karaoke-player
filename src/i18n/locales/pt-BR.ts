@@ -28,7 +28,7 @@ export default {
   },
   home: {
     welcome: 'Bem-vindo ao UP! BEATS Karaokê',
-    description: 'Cante seu coração com nossa experiência de karaokê. Acesse milhares de músicas e aproveite a exibição de letras em tempo real.',
+    description: 'Solte a voz: busque milhares de músicas, acompanhe a letra sincronizada em tempo real e tire a voz original para cantar por cima.',
     tryKaraoke: 'Experimente o Modo Karaokê',
     popularArtists: 'Artistas Populares',
     viewAll: 'Ver Todos',

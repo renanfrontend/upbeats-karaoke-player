@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Mic2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import MusicCard from './MusicCard';
@@ -14,6 +15,7 @@ interface FeaturedSectionProps {
 }
 
 const FeaturedSection: React.FC<FeaturedSectionProps> = ({ title, items, onViewAll }) => {
+  const { t } = useTranslation();
   const { playTrack } = usePlayer();
   const navigate = useNavigate();
 
@@ -26,7 +28,7 @@ const FeaturedSection: React.FC<FeaturedSectionProps> = ({ title, items, onViewA
             onClick={onViewAll}
             className="text-sm text-upbeats-400 hover:text-upbeats-300 font-medium"
           >
-            View All
+            {t('home.viewAll')}
           </button>
         )}
       </div>
