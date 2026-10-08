@@ -28,4 +28,11 @@ i18n
     }
   });
 
+// Mantém o atributo lang da página igual ao idioma em uso (leitores de tela e buscadores).
+const syncHtmlLang = (lng: string) => {
+  if (typeof document !== 'undefined') document.documentElement.lang = lng.startsWith('pt') ? 'pt-BR' : lng.startsWith('es') ? 'es' : 'en';
+};
+syncHtmlLang(i18n.resolvedLanguage || i18n.language || 'pt');
+i18n.on('languageChanged', syncHtmlLang);
+
 export default i18n;
