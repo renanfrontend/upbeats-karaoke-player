@@ -77,6 +77,7 @@ export default {
     voiceKaraoke: 'Karaoke',
     voiceLevel: 'Level',
     vocalControlUnavailable: "This track's audio can't be processed — use \"Sing with my music\" to get voice control.",
+    previewRestarted: 'The 30 s preview ended and restarted. To sing the full song, use "Sing with my music".',
     musicVolume: 'Music volume',
     seek: 'Track position',
     useMyMusic: 'Sing with my music',

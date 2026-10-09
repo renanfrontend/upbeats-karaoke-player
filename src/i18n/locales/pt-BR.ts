@@ -77,6 +77,7 @@ export default {
     voiceKaraoke: 'Karaokê',
     voiceLevel: 'Nível',
     vocalControlUnavailable: 'Esta faixa não permite processar o áudio — use "Cantar com minha música" para ter o controle de voz.',
+    previewRestarted: 'A prévia de 30 s acabou e recomeçou. Para cantar a música inteira, use "Cantar com minha música".',
     musicVolume: 'Volume da música',
     seek: 'Posição da música',
     useMyMusic: 'Cantar com minha música',

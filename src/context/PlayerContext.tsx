@@ -135,6 +135,16 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       const onPause = () => isActive(el) && setIsPlaying(false);
       const onEnded = () => {
         if (!isActive(el)) return;
+        // Previews last 30 s. While singing (mic on) restart the backing track
+        // instead of leaving the singer alone with only their own voice.
+        const isPreview = !currentTrackRef.current?.id.startsWith("local-");
+        if (isPreview && engineRef.current?.micActive) {
+          el.currentTime = 0;
+          setCurrentTime(0);
+          playSafely(el);
+          toast.info(tRef.current("karaoke.previewRestarted"), { id: "preview-restarted" });
+          return;
+        }
         setIsPlaying(false);
         setCurrentTime(0);
       };
