@@ -78,6 +78,10 @@ O app abre em `http://localhost:8080/upbeats-karaoke-player/`. O microfone exige
 
 Cada push na `main` publica no GitHub Pages (`.github/workflows/deploy.yml`).
 
+## App Android
+
+O mesmo karaokê também vira um app Android (Capacitor), com o APK gerado na nuvem pelo fluxo **Android APK** do GitHub Actions. Como instalar, gerar versões novas e publicar na Play Store: [docs/android.md](docs/android.md).
+
 ## Dados de terceiros
 
 - [iTunes Search API](https://performance-partners.apple.com/search-api): busca, capas e prévias de 30 s.
