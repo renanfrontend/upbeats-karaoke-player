@@ -40,12 +40,24 @@ const request = <T>(req: IDBRequest<T>): Promise<T> =>
     req.onerror = () => reject(req.error);
   });
 
+// Etiquetas que baixadores e lojas colocam no nome do arquivo e atrapalham a busca da letra.
+const NOISE = /remaster|mp3|kbps|\b\d{2,3}\s?k\b|official|oficial|video|v[ií]deo|audio|áudio|lyrics|letra|\bhd\b|\bhq\b|explicit|download|free/i;
+
+/** "Heart of Gold (2009 Remaster)(MP3 160K)" vira "Heart of Gold". */
+export const cleanSongTitle = (title: string) => {
+  const cleaned = title
+    .replace(/[([{][^)\]}]*[)\]}]/g, (group) => (NOISE.test(group) ? "" : group))
+    .replace(/\s{2,}/g, " ")
+    .trim();
+  return cleaned || title.trim();
+};
+
 /** "Artista - Música.mp3" vira { artist, title }; sem hífen, só o título. */
 export const parseSongName = (fileName: string, fallbackArtist: string) => {
   const name = fileName.replace(/\.[^.]+$/, "").replace(/_/g, " ");
   const dash = name.indexOf(" - ");
   const artist = dash > 0 ? name.slice(0, dash).trim() : fallbackArtist;
-  const title = dash > 0 ? name.slice(dash + 3).trim() : name.trim();
+  const title = cleanSongTitle(dash > 0 ? name.slice(dash + 3) : name);
   return { artist, title: title || name };
 };
 

@@ -330,6 +330,23 @@ async function fetchLrclib(track: Track): Promise<LrclibResponse | null> {
     /* give up */
   }
 
+  // Arquivos do próprio aparelho muitas vezes não trazem o artista no nome: tenta só pelo título.
+  if (track.id.startsWith("local-")) {
+    try {
+      const q = new URLSearchParams({ q: track.title });
+      const res = await fetch(`https://lrclib.net/api/search?${q.toString()}`, {
+        headers: { Accept: "application/json" },
+      });
+      if (res.ok) {
+        const list = (await res.json()) as LrclibResponse[];
+        const best = list.find((l) => l.syncedLyrics) ?? list.find((l) => l.plainLyrics);
+        if (best) return best;
+      }
+    } catch {
+      /* sem letra */
+    }
+  }
+
   return null;
 }
 
