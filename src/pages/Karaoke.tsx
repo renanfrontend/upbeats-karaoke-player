@@ -12,6 +12,7 @@ import { Slider } from '@/components/ui/slider';
 import { toast } from 'sonner';
 import { usePlayer } from '@/context/PlayerContext';
 import {
+  cleanSongTitle,
   getSongFile,
   isSupported as canSaveSongs,
   listSongs,
@@ -39,7 +40,8 @@ const formatTime = (timeInSeconds: number) => {
  */
 const trackFromSong = (song: Pick<SavedSong, 'id' | 'title' | 'artist'>, audio: Blob): Track => ({
   id: song.id,
-  title: song.title,
+  // Músicas salvas antes da limpeza ainda trazem "(MP3 160K)" etc. no título.
+  title: cleanSongTitle(song.title),
   artist: song.artist,
   artistId: '',
   albumTitle: '',
@@ -319,21 +321,21 @@ const Karaoke = () => {
                 )}
               </div>
 
-              {lyrics ? (
-                <KaraokePlayer
-                  lyrics={lyrics.lines}
-                  synced={lyrics.synced}
-                  currentTime={displayTime}
-                  isPlaying={isThisTrackCurrent && isPlaying}
-                  trackId={track.id}
-                />
-              ) : (
-                <div className="bg-secondary/20 rounded-lg p-6 text-center">
-                  <Music className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
-                  <h3 className="text-xl font-medium mb-2">
+              {/* O modo karaokê (voz original e microfone) funciona com ou sem letra. */}
+              <KaraokePlayer
+                lyrics={lyrics?.lines ?? []}
+                synced={lyrics?.synced ?? false}
+                currentTime={displayTime}
+                isPlaying={isThisTrackCurrent && isPlaying}
+                trackId={track.id}
+              />
+              {!lyrics && (
+                <div className="bg-secondary/20 rounded-lg p-4 text-center">
+                  <Music className="mx-auto mb-2 h-8 w-8 text-muted-foreground" />
+                  <h3 className="text-base font-medium mb-1">
                     {isLoadingLyrics ? t('karaoke.loadingLyrics') : t('karaoke.noLyrics')}
                   </h3>
-                  <p className="text-muted-foreground">{t('karaoke.noLyricsDesc')}</p>
+                  <p className="text-sm text-muted-foreground">{t('karaoke.noLyricsDesc')}</p>
                 </div>
               )}
             </>
