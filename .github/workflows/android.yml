@@ -37,7 +37,9 @@ jobs:
 
       - name: Gerar o APK (debug, assinado com a chave de depuração)
         working-directory: android
-        run: ./gradlew assembleDebug --no-daemon
+        run: |
+          chmod +x ./gradlew
+          ./gradlew assembleDebug --no-daemon
 
       - uses: actions/upload-artifact@v6
         with:
