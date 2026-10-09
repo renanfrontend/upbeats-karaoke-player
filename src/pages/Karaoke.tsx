@@ -7,10 +7,21 @@ import { getTrackById, getLyricsForTrack, getTopTracks, type Track } from '@/ser
 import AppLayout from '@/components/layout/AppLayout';
 import KaraokePlayer from '@/components/karaoke/KaraokePlayer';
 import { Button } from '@/components/ui/button';
-import { Play, Pause, ArrowLeft, Volume2, Music, Search, Upload } from 'lucide-react';
+import { Play, Pause, ArrowLeft, Volume2, Music, Search, Upload, Trash2 } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { toast } from 'sonner';
 import { usePlayer } from '@/context/PlayerContext';
+import {
+  getSongFile,
+  isSupported as canSaveSongs,
+  listSongs,
+  parseSongName,
+  removeSong,
+  songIdForFile,
+  requestPersistence,
+  saveSong,
+  type SavedSong,
+} from '@/services/mySongs';
 
 const FALLBACK_IMG = `${import.meta.env.BASE_URL}placeholder.svg`;
 
@@ -26,22 +37,16 @@ const formatTime = (timeInSeconds: number) => {
  * full (instead of a 30s preview) and is same-origin, so vocal removal always
  * works on it — handy when a streaming preview can't be processed.
  */
-const trackFromFile = (file: File, fallbackArtist: string): Track => {
-  const name = file.name.replace(/\.[^.]+$/, '');
-  const dash = name.indexOf(' - ');
-  const artist = dash > 0 ? name.slice(0, dash).trim() : fallbackArtist;
-  const title = dash > 0 ? name.slice(dash + 3).trim() : name.trim();
-  return {
-    id: `local-${file.name}-${file.size}`,
-    title: title || name,
-    artist,
-    artistId: '',
-    albumTitle: '',
-    coverImage: FALLBACK_IMG,
-    duration: 0,
-    previewUrl: URL.createObjectURL(file),
-  };
-};
+const trackFromSong = (song: Pick<SavedSong, 'id' | 'title' | 'artist'>, audio: Blob): Track => ({
+  id: song.id,
+  title: song.title,
+  artist: song.artist,
+  artistId: '',
+  albumTitle: '',
+  coverImage: FALLBACK_IMG,
+  duration: 0,
+  previewUrl: URL.createObjectURL(audio),
+});
 
 const Karaoke = () => {
   const { t } = useTranslation();
@@ -119,17 +124,83 @@ const Karaoke = () => {
     else playTrack(track, localTrack ? undefined : suggestedTracks);
   };
 
-  const handleFilePicked = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    event.target.value = '';
-    if (!file) return;
+  const [mySongs, setMySongs] = useState<SavedSong[]>([]);
+  const [dragging, setDragging] = useState(false);
+
+  const refreshSongs = useCallback(async () => {
+    if (!canSaveSongs()) return;
+    try {
+      setMySongs(await listSongs());
+    } catch {
+      /* sem armazenamento disponível (ex.: aba anônima): a lista fica vazia */
+    }
+  }, []);
+
+  useEffect(() => {
+    void refreshSongs();
+  }, [refreshSongs]);
+
+  const playLocal = (song: Pick<SavedSong, 'id' | 'title' | 'artist'>, audio: Blob) => {
     if (localUrlRef.current) URL.revokeObjectURL(localUrlRef.current);
-    const next = trackFromFile(file, t('karaoke.localArtist'));
+    const next = trackFromSong(song, audio);
     localUrlRef.current = next.previewUrl ?? null;
     setLocalTrack(next);
     if (trackId) navigate('/karaoke');
-    toast.success(t('karaoke.localLoaded'));
+    return next;
   };
+
+  // Salva todas as músicas escolhidas (celular ou computador) e já toca a primeira.
+  const addSongs = async (picked: File[]) => {
+    const files = picked.filter((file) => file.type.startsWith('audio/') || /\.(mp3|m4a|aac|wav|ogg|opus|flac|weba|webm)$/i.test(file.name));
+    if (!files.length) {
+      if (picked.length) toast.error(t('karaoke.notAudio'));
+      return;
+    }
+    const fallbackArtist = t('karaoke.localArtist');
+    try {
+      if (!canSaveSongs()) throw new Error('no storage');
+      void requestPersistence();
+      for (const file of files) await saveSong(file, fallbackArtist);
+      toast.success(t('karaoke.songsSaved', { count: files.length }));
+    } catch {
+      toast.warning(t('karaoke.songNotSaved'));
+    }
+    playLocal({ id: songIdForFile(files[0]), ...parseSongName(files[0].name, fallbackArtist) }, files[0]);
+    void refreshSongs();
+  };
+
+  const handleFilePicked = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files ?? []);
+    event.target.value = '';
+    void addSongs(files);
+  };
+
+  // Tocar numa música da lista já começa a tocar; tocar na que está aberta pausa/retoma.
+  const playSaved = async (song: SavedSong) => {
+    if (localTrack?.id === song.id) {
+      playTrack(localTrack);
+      return;
+    }
+    try {
+      const blob = await getSongFile(song.id);
+      if (!blob) throw new Error('missing');
+      playTrack(playLocal(song, blob));
+    } catch {
+      toast.error(t('karaoke.songMissing'));
+      void refreshSongs();
+    }
+  };
+
+  const deleteSaved = async (song: SavedSong) => {
+    try {
+      await removeSong(song.id);
+      toast.success(t('karaoke.songRemoved'));
+    } finally {
+      void refreshSongs();
+    }
+  };
+
+  const hasFiles = (event: React.DragEvent) => Array.from(event.dataTransfer.types).includes('Files');
 
   const selectTrack = (newTrackId: string) => {
     releaseLocalTrack();
@@ -142,6 +213,7 @@ const Karaoke = () => {
         ref={fileInputRef}
         type="file"
         accept="audio/*"
+        multiple
         className="hidden"
         onChange={handleFilePicked}
       />
@@ -151,7 +223,29 @@ const Karaoke = () => {
         {t('karaoke.back')}
       </Button>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+      <div
+        className="relative grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8"
+        onDragOver={(e) => {
+          if (!hasFiles(e)) return;
+          e.preventDefault();
+          setDragging(true);
+        }}
+        onDragLeave={(e) => {
+          if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setDragging(false);
+        }}
+        onDrop={(e) => {
+          if (!hasFiles(e)) return;
+          e.preventDefault();
+          setDragging(false);
+          void addSongs(Array.from(e.dataTransfer.files));
+        }}
+      >
+        {dragging && (
+          <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-lg border-2 border-dashed border-upbeats-400 bg-upbeats-950/80 text-lg font-semibold">
+            <Upload className="mr-3 h-6 w-6" />
+            {t('karaoke.dropHere')}
+          </div>
+        )}
         <div className="lg:col-span-2 space-y-6">
           {track ? (
             <>
@@ -273,6 +367,48 @@ const Karaoke = () => {
             </Button>
             <p className="text-xs text-muted-foreground mt-2">{t('karaoke.useMyMusicDesc')}</p>
           </div>
+
+          <h2 className="text-xl font-semibold mb-3">{t('karaoke.mySongs')}</h2>
+          {mySongs.length ? (
+            <div className="grid gap-2 mb-6" data-testid="my-songs">
+              {mySongs.map((song) => {
+                const active = localTrack?.id === song.id;
+                return (
+                  <div
+                    key={song.id}
+                    className={`flex items-center rounded-lg ${active ? 'bg-upbeats-900/60' : 'bg-secondary/20 hover:bg-secondary/40'}`}
+                  >
+                    <button
+                      type="button"
+                      className="flex min-w-0 flex-1 items-center gap-3 p-3 text-left"
+                      onClick={() => void playSaved(song)}
+                    >
+                      <span className="shrink-0 rounded-full bg-upbeats-500 p-2">
+                        {active && isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block truncate font-medium">{song.title}</span>
+                        <span className="block truncate text-sm text-muted-foreground">{song.artist}</span>
+                      </span>
+                    </button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="mr-1 shrink-0 text-muted-foreground hover:text-destructive"
+                      onClick={() => void deleteSaved(song)}
+                      aria-label={`${t('karaoke.removeSong')}: ${song.title}`}
+                      title={t('karaoke.removeSong')}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                );
+              })}
+              <p className="text-xs text-muted-foreground">{t('karaoke.mySongsHint')}</p>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground mb-6">{t('karaoke.mySongsEmpty')}</p>
+          )}
 
           <h2 className="text-xl font-semibold mb-4">{t('karaoke.suggestedSongs')}</h2>
           <div className="grid gap-3">
