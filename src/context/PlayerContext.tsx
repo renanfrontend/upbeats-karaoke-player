@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import type { Track } from "@/services/spotifyApi";
 import { KaraokeAudioEngine, type MicEnvironment } from "@/audio/karaokeEngine";
+import { recordPlay } from "@/services/library";
 
 interface PlayerContextValue {
   currentTrack: Track | null;
@@ -131,7 +132,12 @@ export const PlayerProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     const cleanups = elements.map((el) => {
       const onTimeUpdate = () => isActive(el) && setCurrentTime(el.currentTime);
       const onLoadedMetadata = () => isActive(el) && setDuration(el.duration || 0);
-      const onPlay = () => isActive(el) && setIsPlaying(true);
+      const onPlay = () => {
+        if (!isActive(el)) return;
+        setIsPlaying(true);
+        // "Tocadas recentemente" de verdade: registra a faixa quando ela começa a tocar.
+        if (currentTrackRef.current) recordPlay(currentTrackRef.current);
+      };
       const onPause = () => isActive(el) && setIsPlaying(false);
       const onEnded = () => {
         if (!isActive(el)) return;

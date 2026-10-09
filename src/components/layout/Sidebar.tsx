@@ -5,6 +5,7 @@ import { Home, Search, Library, Mic2, Heart, Clock, Globe, Menu, X } from "lucid
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import AppLogo from "./AppLogo";
+import AccountButton from "./AccountButton";
 import { useTranslation } from 'react-i18next';
 import {
   DropdownMenu,
@@ -80,6 +81,7 @@ const Sidebar: React.FC = () => {
       </nav>
 
       <div className="p-4 space-y-4">
+        <AccountButton />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="w-full justify-start gap-2">

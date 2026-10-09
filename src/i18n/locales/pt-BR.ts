@@ -42,7 +42,17 @@ export default {
     createPlaylist: 'Crie Sua Primeira Playlist',
     playlistDescription: 'É fácil organizar suas músicas favoritas em playlists',
     createButton: 'Criar Playlist',
-    songsCount: '{count} músicas',
+    songsCount: '{{count}} músicas',
+
+    like: 'Curtir',
+
+    unlike: 'Descurtir',
+
+    emptyLiked: 'Toque no coração de uma música para ela aparecer aqui.',
+
+    emptyRecent: 'As músicas que você tocar aparecem aqui.',
+
+    localSong: 'Arquivo do aparelho',
     playAll: 'Reproduzir Tudo'
   },
   karaoke: {
@@ -101,6 +111,18 @@ export default {
     lyricsSyncReset: 'Zerar ajuste',
     lyricsSynced: 'Letra sincronizada!',
     tapToSync: 'Dica: toque na linha que está sendo cantada para calibrar a letra'
+  },
+  auth: {
+    signIn: 'Entrar com Google',
+    signOut: 'Sair',
+    signInError: 'Não foi possível entrar agora. Tente de novo.',
+    signOutError: 'Não foi possível sair agora.',
+    sync: {
+      off: 'Sincronização desligada',
+      syncing: 'Sincronizando…',
+      synced: 'Sincronizado',
+      error: 'Sem conexão com a nuvem'
+    }
   },
   common: {
     play: 'Reproduzir',

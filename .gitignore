@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Configuração do Firebase do app Android (vem do segredo GOOGLE_SERVICES_JSON no build da nuvem).
+android/app/google-services.json

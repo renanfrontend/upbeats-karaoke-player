@@ -1,4 +1,5 @@
 
+import { initAuth } from './services/auth'
 import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
@@ -10,3 +11,6 @@ if (!container) throw new Error("Failed to find the root element");
 
 // Create root and render the app
 createRoot(container).render(<App />);
+
+// Login com Google e sincronização: só carrega quando o Firebase está configurado.
+void initAuth();

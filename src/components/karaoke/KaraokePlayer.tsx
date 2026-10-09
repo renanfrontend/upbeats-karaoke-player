@@ -6,6 +6,7 @@ import { Minus, Plus, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { usePlayer } from '@/context/PlayerContext';
+import { getOffset, setOffset as saveOffset } from '@/services/library';
 import { AudioVisualizer } from './AudioVisualizer';
 import VoiceControls from './VoiceControls';
 
@@ -23,31 +24,15 @@ interface KaraokePlayerProps {
   trackId?: string;
 }
 
-const OFFSET_STORAGE_PREFIX = 'upbeats-lyrics-offset:';
 const OFFSET_STEP = 0.5;
 /** A silent stretch this long earns a count-in before the next line. */
 const COUNT_IN_SECONDS = 3;
 
-// localStorage throws in private mode and when site data is blocked, and the
-// lyrics have to keep working either way.
-const readStoredOffset = (trackId?: string): number => {
-  if (!trackId) return 0;
-  try {
-    const raw = localStorage.getItem(OFFSET_STORAGE_PREFIX + trackId);
-    const value = raw === null ? NaN : parseFloat(raw);
-    return isFinite(value) ? value : 0;
-  } catch {
-    return 0;
-  }
-};
+// The calibration lives in the library (src/services/library.ts), which also syncs it after login.
+const readStoredOffset = (trackId?: string): number => (trackId ? getOffset(trackId) : 0);
 
 const writeStoredOffset = (trackId: string | undefined, value: number): void => {
-  if (!trackId) return;
-  try {
-    localStorage.setItem(OFFSET_STORAGE_PREFIX + trackId, String(value));
-  } catch {
-    /* calibration just won't survive a reload */
-  }
+  if (trackId) saveOffset(trackId, value);
 };
 
 const KaraokePlayer: React.FC<KaraokePlayerProps> = ({

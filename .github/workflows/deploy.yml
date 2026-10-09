@@ -27,6 +27,12 @@ jobs:
 
       - run: npm ci
       - run: npm run build
+        env:
+          # Configuração pública do Firebase (login com Google). Sem os segredos, o app fica sem login.
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
+          VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+          VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
 
       - uses: actions/upload-pages-artifact@v5
         with:

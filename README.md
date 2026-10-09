@@ -17,7 +17,9 @@ Karaokê que roda direto no navegador: busque uma música, acompanhe a **letra s
 - **Controlar a voz original**: *Original*, *Guia* (voz baixinha, só para orientar) ou *Karaokê* (voz removida), com um controle fino de nível.
 - **Cantar com o microfone** ouvindo a própria voz junto com a música, com volume, eco e medidor de nível. Há dois modos: **caixas de som** (cancelamento de eco ligado, para evitar microfonia) e **fones** (voz mais natural).
 - **Minhas músicas**: escolha uma ou várias músicas do celular ou do computador (ou arraste os arquivos para a tela) e elas ficam salvas no próprio aparelho, na lista "Minhas músicas", para cantar a faixa inteira quando quiser. Nada é enviado a servidor algum. Como o arquivo é local, o controle de voz sempre funciona. Dica: nomeie o arquivo como "Artista - Música" para a letra vir sozinha.
-- Interface em **português, inglês e espanhol**, com músicas curtidas e tocadas recentemente.
+- **Curtir** músicas (coração) e ver as **tocadas recentemente** na Biblioteca.
+- **Entrar com Google** (opcional) para levar curtidas, histórico, ajustes de letra e a lista de Minhas músicas para qualquer aparelho. Configuração: [docs/firebase.md](docs/firebase.md).
+- Interface em **português, inglês e espanhol**.
 
 ## Stack
 
