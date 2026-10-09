@@ -16,7 +16,7 @@ Karaokê que roda direto no navegador: busque uma música, acompanhe a **letra s
 - **Cantar com a letra sincronizada** linha a linha (LRCLIB). Se a letra estiver adiantada ou atrasada, basta tocar na linha que está sendo cantada para calibrar. O ajuste fica salvo por música.
 - **Controlar a voz original**: *Original*, *Guia* (voz baixinha, só para orientar) ou *Karaokê* (voz removida), com um controle fino de nível.
 - **Cantar com o microfone** ouvindo a própria voz junto com a música, com volume, eco e medidor de nível. Há dois modos: **caixas de som** (cancelamento de eco ligado, para evitar microfonia) e **fones** (voz mais natural).
-- **Cantar com a sua música**: abra um arquivo do seu aparelho para tocar a faixa inteira. Como o arquivo é local, o controle de voz sempre funciona.
+- **Minhas músicas**: escolha uma ou várias músicas do celular ou do computador (ou arraste os arquivos para a tela) e elas ficam salvas no próprio aparelho, na lista "Minhas músicas", para cantar a faixa inteira quando quiser. Nada é enviado a servidor algum. Como o arquivo é local, o controle de voz sempre funciona. Dica: nomeie o arquivo como "Artista - Música" para a letra vir sozinha.
 - Interface em **português, inglês e espanhol**, com músicas curtidas e tocadas recentemente.
 
 ## Stack
