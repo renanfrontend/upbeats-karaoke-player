@@ -68,6 +68,15 @@ export class KaraokeAudioEngine {
       (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     this.ctx = new Ctor();
 
+    // Phones can suspend ("interrupted" on iOS) the context on their own, e.g.
+    // when the mic opens or the app loses focus. Resume it, otherwise the music
+    // goes silent while the mic keeps working.
+    const keepAlive = () => {
+      if ((this.ctx.state as string) !== "running" && !document.hidden) this.resume();
+    };
+    this.ctx.addEventListener("statechange", keepAlive);
+    document.addEventListener("visibilitychange", keepAlive);
+
     const master = this.ctx.createGain();
     master.connect(this.ctx.destination);
 
