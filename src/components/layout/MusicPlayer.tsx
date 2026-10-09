@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX } from "lucide-react";
 import { useTranslation } from 'react-i18next';
 import { usePlayer } from '@/context/PlayerContext';
+import LikeButton from '@/components/music/LikeButton';
 
 const FALLBACK_IMG = `${import.meta.env.BASE_URL}placeholder.svg`;
 
@@ -51,6 +52,7 @@ const MusicPlayer: React.FC = () => {
           <h4 className="font-medium text-xs truncate">{title}</h4>
           <p className="text-xs text-muted-foreground truncate">{artist}</p>
         </div>
+        {currentTrack && <LikeButton track={currentTrack} className="h-8 w-8" />}
         <Button
           size="icon"
           onClick={togglePlay}
@@ -74,6 +76,7 @@ const MusicPlayer: React.FC = () => {
             <h4 className="font-medium text-sm truncate">{title}</h4>
             <p className="text-xs text-muted-foreground truncate">{artist}</p>
           </div>
+          {currentTrack && <LikeButton track={currentTrack} />}
         </div>
 
         <div className="flex flex-col items-center max-w-md w-full">

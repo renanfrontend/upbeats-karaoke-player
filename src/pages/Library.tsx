@@ -1,82 +1,83 @@
-
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 import AppLayout from '@/components/layout/AppLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Heart, Clock, Music2, Play } from 'lucide-react';
-import { findTrack } from '@/services/spotifyApi';
-import { usePlayer } from '@/context/PlayerContext';
+import { Heart, Clock, Music2, Play, HardDrive } from 'lucide-react';
+import LikeButton from '@/components/music/LikeButton';
+import { useLibrary, type LibraryTrack } from '@/services/library';
+import type { Track } from '@/services/spotifyApi';
 
 const FALLBACK_IMG = `${import.meta.env.BASE_URL}placeholder.svg`;
 
-interface LibrarySong {
-  id: string;
-  title: string;
-  artist: string;
-  album: string;
-  duration: string;
-  cover: string;
-}
+const asTrack = (item: LibraryTrack): Track => ({
+  id: item.id,
+  title: item.title,
+  artist: item.artist,
+  artistId: '',
+  albumTitle: item.albumTitle,
+  coverImage: item.coverImage || FALLBACK_IMG,
+  duration: 0,
+});
 
 const Library = () => {
   const { t } = useTranslation();
-  const { playTrack } = usePlayer();
+  const navigate = useNavigate();
+  const { liked, recent } = useLibrary();
 
-  const likedSongs: LibrarySong[] = [
-    { id: '1', title: 'Hello', artist: 'Adele', album: '25', duration: '4:55', cover: 'https://i.scdn.co/image/ab67616d0000b2736a7874a8d05aaf3eddce428a' },
-    { id: '2', title: 'Blinding Lights', artist: 'The Weeknd', album: 'After Hours', duration: '3:20', cover: 'https://i.scdn.co/image/ab67616d0000b27338cf30ffb7079c6b176edcd4' },
-    { id: '3', title: 'Easy On Me', artist: 'Adele', album: '30', duration: '3:44', cover: 'https://i.scdn.co/image/ab67616d0000b273a7a0fcfd9441d7a404a9cf73' },
-  ];
-
-  const recentlyPlayed: LibrarySong[] = [
-    { id: '4', title: 'Shape of You', artist: 'Ed Sheeran', album: '÷ (Divide)', duration: '3:53', cover: 'https://i.scdn.co/image/ab67616d0000b273ba5db46f4b838ef6027e6f96' },
-    { id: '5', title: 'Anti-Hero', artist: 'Taylor Swift', album: 'Midnights', duration: '3:20', cover: 'https://i.scdn.co/image/ab67616d0000b273bb54dde68cd23e2a268ae0f5' },
-    { id: '1', title: 'Hello', artist: 'Adele', album: '25', duration: '4:55', cover: 'https://i.scdn.co/image/ab67616d0000b2736a7874a8d05aaf3eddce428a' },
-  ];
-
-  // Library rows are static metadata; resolve a real, playable track on demand.
-  const handlePlay = async (song: LibrarySong) => {
-    const track = await findTrack(`${song.artist} ${song.title}`);
-    if (track) {
-      playTrack(track);
-    } else {
-      toast.error(t('search.noResults'));
-    }
+  // Abre a música no modo karaokê: as da busca pelo id do iTunes, as do aparelho pela lista "Minhas músicas".
+  const open = (item: LibraryTrack) => {
+    navigate(item.local ? `/karaoke?local=${encodeURIComponent(item.id)}` : `/karaoke?trackId=${encodeURIComponent(item.id)}`);
   };
 
-  const playFirst = (songs: LibrarySong[]) => {
-    if (songs.length) handlePlay(songs[0]);
-  };
-
-  const renderSongList = (songs: LibrarySong[]) => (
-    <div className="grid gap-2">
-      {songs.map((song) => (
-        <div
-          key={`${song.id}-${song.title}`}
-          className="flex items-center p-3 hover:bg-secondary/40 rounded-md transition-colors cursor-pointer group"
-          onClick={() => handlePlay(song)}
-        >
-          <div className="relative h-12 w-12 shrink-0">
-            <img
-              src={song.cover}
-              alt={song.title}
-              className="h-12 w-12 rounded object-cover"
-              onError={(e) => { e.currentTarget.src = FALLBACK_IMG; }}
-            />
-            <div className="absolute inset-0 bg-black/40 rounded flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-              <Play className="h-5 w-5 text-white ml-0.5" />
+  const renderSongList = (songs: LibraryTrack[], empty: string) =>
+    songs.length ? (
+      <div className="grid gap-2">
+        {songs.map((song) => (
+          <div
+            key={song.id}
+            className="flex items-center p-3 hover:bg-secondary/40 rounded-md transition-colors cursor-pointer group"
+            onClick={() => open(song)}
+          >
+            <div className="relative h-12 w-12 shrink-0">
+              <img
+                src={song.coverImage || FALLBACK_IMG}
+                alt={song.title}
+                className="h-12 w-12 rounded object-cover"
+                onError={(e) => { e.currentTarget.src = FALLBACK_IMG; }}
+              />
+              <div className="absolute inset-0 bg-black/40 rounded flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <Play className="h-5 w-5 text-white ml-0.5" />
+              </div>
             </div>
+            <div className="ml-4 min-w-0 flex-1">
+              <h3 className="font-medium truncate">{song.title}</h3>
+              <p className="text-sm text-muted-foreground truncate">
+                {song.local && <HardDrive className="inline h-3.5 w-3.5 mr-1 -mt-0.5" aria-label={t('library.localSong')} />}
+                {song.artist}
+              </p>
+            </div>
+            {song.albumTitle && <div className="text-muted-foreground text-sm mr-4 hidden md:block truncate max-w-[30%]">{song.albumTitle}</div>}
+            <LikeButton track={asTrack(song)} />
           </div>
-          <div className="ml-4 min-w-0 flex-1">
-            <h3 className="font-medium truncate">{song.title}</h3>
-            <p className="text-sm text-muted-foreground truncate">{song.artist}</p>
-          </div>
-          <div className="text-muted-foreground text-sm mr-4 hidden md:block">{song.album}</div>
-          <div className="text-muted-foreground text-sm hidden sm:block">{song.duration}</div>
-        </div>
-      ))}
+        ))}
+      </div>
+    ) : (
+      <p className="text-muted-foreground text-sm py-8 text-center">{empty}</p>
+    );
+
+  const header = (title: string, songs: LibraryTrack[]) => (
+    <div className="flex justify-between items-center mb-4 gap-4">
+      <div>
+        <h2 className="text-xl font-semibold">{title}</h2>
+        <p className="text-muted-foreground text-sm">{t('library.songsCount', { count: songs.length })}</p>
+      </div>
+      {songs.length > 0 && (
+        <Button className="bg-upbeats-500 hover:bg-upbeats-600" onClick={() => open(songs[0])}>
+          <Play className="h-4 w-4 mr-2" /> {t('library.playAll')}
+        </Button>
+      )}
     </div>
   );
 
@@ -103,33 +104,13 @@ const Library = () => {
         </TabsList>
 
         <TabsContent value="liked" className="bg-secondary/20 rounded-lg p-4">
-          <div className="flex justify-between items-center mb-4">
-            <div>
-              <h2 className="text-xl font-semibold">{t('library.likedSongs')}</h2>
-              <p className="text-muted-foreground text-sm">
-                {t('library.songsCount', { count: likedSongs.length })}
-              </p>
-            </div>
-            <Button className="bg-upbeats-500 hover:bg-upbeats-600" onClick={() => playFirst(likedSongs)}>
-              <Play className="h-4 w-4 mr-2" /> {t('library.playAll')}
-            </Button>
-          </div>
-          {renderSongList(likedSongs)}
+          {header(t('library.likedSongs'), liked)}
+          {renderSongList(liked, t('library.emptyLiked'))}
         </TabsContent>
 
         <TabsContent value="recent" className="bg-secondary/20 rounded-lg p-4">
-          <div className="flex justify-between items-center mb-4">
-            <div>
-              <h2 className="text-xl font-semibold">{t('library.recentlyPlayed')}</h2>
-              <p className="text-muted-foreground text-sm">
-                {t('library.songsCount', { count: recentlyPlayed.length })}
-              </p>
-            </div>
-            <Button className="bg-upbeats-500 hover:bg-upbeats-600" onClick={() => playFirst(recentlyPlayed)}>
-              <Play className="h-4 w-4 mr-2" /> {t('library.playAll')}
-            </Button>
-          </div>
-          {renderSongList(recentlyPlayed)}
+          {header(t('library.recentlyPlayed'), recent)}
+          {renderSongList(recent, t('library.emptyRecent'))}
         </TabsContent>
 
         <TabsContent value="playlists" className="bg-secondary/20 rounded-lg p-6">

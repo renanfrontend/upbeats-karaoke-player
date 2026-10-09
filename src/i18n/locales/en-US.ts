@@ -42,7 +42,17 @@ export default {
     createPlaylist: 'Create Your First Playlist',
     playlistDescription: "It's easy to organize your favorite songs into playlists",
     createButton: 'Create Playlist',
-    songsCount: '{count} songs',
+    songsCount: '{{count}} songs',
+
+    like: 'Like',
+
+    unlike: 'Unlike',
+
+    emptyLiked: 'Tap the heart on a song to see it here.',
+
+    emptyRecent: 'Songs you play show up here.',
+
+    localSong: 'File on this device',
     playAll: 'Play All'
   },
   karaoke: {
@@ -101,6 +111,18 @@ export default {
     lyricsSyncReset: 'Reset adjustment',
     lyricsSynced: 'Lyrics synced!',
     tapToSync: 'Tip: tap the line being sung to calibrate the lyrics'
+  },
+  auth: {
+    signIn: 'Sign in with Google',
+    signOut: 'Sign out',
+    signInError: "Couldn't sign in right now. Please try again.",
+    signOutError: "Couldn't sign out right now.",
+    sync: {
+      off: 'Sync off',
+      syncing: 'Syncing…',
+      synced: 'Synced',
+      error: "Can't reach the cloud"
+    }
   },
   common: {
     play: 'Play',

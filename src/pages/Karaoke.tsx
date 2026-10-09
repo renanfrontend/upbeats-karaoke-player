@@ -11,6 +11,7 @@ import { Play, Pause, ArrowLeft, Volume2, Music, Search, Upload, Trash2 } from '
 import { Slider } from '@/components/ui/slider';
 import { toast } from 'sonner';
 import { usePlayer } from '@/context/PlayerContext';
+import LikeButton from '@/components/music/LikeButton';
 import {
   cleanSongTitle,
   getSongFile,
@@ -202,6 +203,29 @@ const Karaoke = () => {
     }
   };
 
+  // Vindo da Biblioteca (?local=<id>): abre a música salva no aparelho.
+  const localParam = searchParams.get('local');
+  useEffect(() => {
+    if (!localParam || localTrack?.id === localParam) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const [blob, songs] = await Promise.all([getSongFile(localParam), listSongs()]);
+        const song = songs.find((item) => item.id === localParam);
+        if (cancelled) return;
+        if (blob && song) playLocal(song, blob);
+        else toast.error(t('karaoke.songMissing'));
+      } catch {
+        if (!cancelled) toast.error(t('karaoke.songMissing'));
+      }
+      if (!cancelled) navigate('/karaoke', { replace: true });
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- só reage ao parâmetro da URL
+  }, [localParam]);
+
   const hasFiles = (event: React.DragEvent) => Array.from(event.dataTransfer.types).includes('Files');
 
   const selectTrack = (newTrackId: string) => {
@@ -282,7 +306,8 @@ const Karaoke = () => {
                       )}
                     </Button>
 
-                    <div className="flex items-center ml-6 space-x-2">
+                    <LikeButton track={track} className="ml-2" />
+                    <div className="flex items-center ml-4 space-x-2">
                       <Volume2 className="h-5 w-5 text-muted-foreground" />
                       <Slider
                         value={[volume]}

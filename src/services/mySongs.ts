@@ -2,6 +2,8 @@
 // aparelho (IndexedDB). Nada é enviado a servidor algum. Os metadados ficam
 // separados dos arquivos para a lista abrir rápido, sem carregar áudio.
 
+import { forgetSong, rememberSong } from "./library";
+
 export interface SavedSong {
   /** Mesmo formato usado pelo player para arquivos locais ("local-<nome>-<tamanho>"). */
   id: string;
@@ -95,6 +97,8 @@ export const saveSong = async (file: File, fallbackArtist: string): Promise<Save
   tx.objectStore(FILES).put(file, song.id);
   await done(tx);
   db.close();
+  // O nome entra na biblioteca, que a sincronização leva para os outros aparelhos.
+  rememberSong({ id: song.id, title: song.title, artist: song.artist, size: song.size });
   return song;
 };
 
@@ -112,4 +116,5 @@ export const removeSong = async (id: string): Promise<void> => {
   tx.objectStore(FILES).delete(id);
   await done(tx);
   db.close();
+  forgetSong(id);
 };
